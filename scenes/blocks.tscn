@@ -1,0 +1,40 @@
+[gd_scene load_steps=6 format=3 uid="uid://brajdw6pnc88a"]
+
+[ext_resource type="Material" uid="uid://bxoqxuw02lxrx" path="res://materials/grass.tres" id="1_yvk4h"]
+[ext_resource type="Material" uid="uid://f6sds0skbf25" path="res://materials/brown.tres" id="2_yfsow"]
+[ext_resource type="Material" uid="uid://cawswvxy7gqtx" path="res://materials/hilight.tres" id="3_40v8d"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_cgoft"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_vx088"]
+
+[node name="Blocks" type="Node3D"]
+
+[node name="Gras" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_cgoft")
+surface_material_override/0 = ExtResource("1_yvk4h")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Gras"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Gras/StaticBody3D"]
+shape = SubResource("BoxShape3D_vx088")
+
+[node name="Dirt" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1)
+mesh = SubResource("BoxMesh_cgoft")
+surface_material_override/0 = ExtResource("2_yfsow")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Dirt"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Dirt/StaticBody3D"]
+shape = SubResource("BoxShape3D_vx088")
+
+[node name="Stone" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2)
+mesh = SubResource("BoxMesh_cgoft")
+surface_material_override/0 = ExtResource("3_40v8d")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Stone"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Stone/StaticBody3D"]
+shape = SubResource("BoxShape3D_vx088")

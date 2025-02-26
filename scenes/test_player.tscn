@@ -1,0 +1,44 @@
+[gd_scene load_steps=2 format=3 uid="uid://bm0ffs8kunfgi"]
+
+[ext_resource type="PackedScene" uid="uid://banp73bymnb3s" path="res://scenes/c_chunk.tscn" id="1_wxjtm"]
+
+[node name="TestPlayer" type="Node3D"]
+
+[node name="physical" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.129002, -0.311452, 0)
+
+[node name="Head" parent="physical" instance=ExtResource("1_wxjtm")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.76, -0.06)
+chunk_size = Vector3i(12, 12, 12)
+minY = 100
+cellSize = 0.02
+
+[node name="Body" parent="physical" instance=ExtResource("1_wxjtm")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.04, 0.28, 0)
+chunk_size = Vector3i(16, 24, 8)
+minY = 100
+cellSize = 0.02
+
+[node name="LeftLeg" parent="physical" instance=ExtResource("1_wxjtm")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0407412, -0.2, -3.52263e-05)
+chunk_size = Vector3i(8, 24, 8)
+minY = 100
+cellSize = 0.02
+
+[node name="RightLeg" parent="physical" instance=ExtResource("1_wxjtm")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.119979, -0.2, -3.52263e-05)
+chunk_size = Vector3i(8, 24, 8)
+minY = 100
+cellSize = 0.02
+
+[node name="LeftArm" parent="physical" instance=ExtResource("1_wxjtm")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.2, 0.28, 0)
+chunk_size = Vector3i(8, 24, 8)
+minY = 100
+cellSize = 0.02
+
+[node name="RightArm" parent="physical" instance=ExtResource("1_wxjtm")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.279269, 0.28, 6.58035e-05)
+chunk_size = Vector3i(8, 24, 8)
+minY = 100
+cellSize = 0.02

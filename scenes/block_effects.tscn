@@ -1,0 +1,19 @@
+[gd_scene load_steps=4 format=3 uid="uid://g7186qjlyv67"]
+
+[ext_resource type="Material" uid="uid://cawswvxy7gqtx" path="res://materials/hilight.tres" id="1_rgjo3"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_8inen"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_5101y"]
+
+[node name="BlockEffects" type="Node3D"]
+
+[node name="Hilight" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2)
+mesh = SubResource("BoxMesh_8inen")
+surface_material_override/0 = ExtResource("1_rgjo3")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Hilight"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Hilight/StaticBody3D"]
+shape = SubResource("BoxShape3D_5101y")
