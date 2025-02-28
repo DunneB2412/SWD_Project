@@ -1,6 +1,6 @@
 @tool
 extends StaticBody3D
-
+class_name Chunk
 #masks for world encoding.
 #all 32 bits accounted for 
 const encoder = {
@@ -36,15 +36,15 @@ const FACES: Dictionary = {
 	"bottom":[[1,0,5,4],Vector3i(0,-1,0),Blocks.BOTTOM],
 	"right":[[5,4,7,6],Vector3i(0,0,1),Blocks.RIGHT],
 	"left":[[0,1,2,3],Vector3i(0,0,-1),Blocks.LEFT],
-	"front":[[1,5,3,7],Vector3(1,0,0),Blocks.FRONT],
-	"back":[[4,0,6,2],Vector3(-1,0,0),Blocks.BACK]
+	"front":[[1,5,3,7],Vector3i(1,0,0),Blocks.FRONT],
+	"back":[[4,0,6,2],Vector3i(-1,0,0),Blocks.BACK]
 }
 # this was really annoying to figure out. at the end of it i found out that the midle ones need to be oposite. after that osition 0 and 3 may be swapped to change the direction of the face.
 
 const TESTMATERIAL = preload("res://materials/test/testmaterial.tres")
 const OUTLINE = preload("res://materials/test/outline.png")
 #Members
-var vxls
+var vxls = []
 var ents = []
 
 #GenParamiters
@@ -59,25 +59,63 @@ var noise: FastNoiseLite = FastNoiseLite.new()
 @export var cellSize: float = 1
 
 var worldPos: Vector3i = Vector3i(0,0,0) 
-var parent
+var world
 
 var texture_surface = SurfaceTool.new()
 var collision_surface = SurfaceTool.new()
 
+var updateQueue: Dictionary = {}
+@export var updateQueueSize = 16
+var checkerThread: Thread = Thread.new()
+
+var updated = false
+
 func _ready() -> void:
 	noise.seed = genSeed
-	
+	updateQueue = {}
 	loadVxls()
 	genMesh()
 
 func _process(_delta: float) -> void:
-	find_actions()
-	
-func find_actions():
-	pass
+	for pos in updateQueue:
+		setVal(pos, updateQueue[pos])
+		updateQueue.erase(pos)
+	if updated:
+		genMesh()
 
+func startSim():
+	pass
+	#checkerThread.start(chunkThread)
+	
+func chunkThread():
+	while true:
+		find_actions()
+		await get_tree().create_timer(0.5).timeout
+func find_actions():
+	
+	for x in chunk_size.x:
+		for y in chunk_size.y:
+			for z in chunk_size.z:
+				pass
+					
+func checkPair(posa, posb) -> void:
+	var ta = getVal(posa)&encoder["blocktype"]["mask"]
+	var tb = getVal(posb)&encoder["blocktype"]["mask"]
+	var pa = Blocks.blocks[Blocks.index[ta-1]]
+	if pa.has("alchemic"):
+		var alc = pa["alchemic"]
+		if alc.has(Blocks.index[tb-1]):
+			var p = alc[Blocks.index[tb-1]]
+			var passesCons = true
+			if p.has("conditions"):
+				var conditions = p["conditions"]["other"]
+				for c in conditions:
+					passesCons = getVal(posb+c) == conditions[c]
+			if passesCons && p.has("other") and !updateQueue.has(posb) and updateQueue.size()<updateQueueSize:
+				updateQueue.merge({posb:p["other"]})
+	
 func genMesh() -> void:
-	# TODO get air first and get visable faces then.
+	
 	
 	#remove all children
 	for c in self.get_children():
@@ -98,12 +136,12 @@ func genMesh() -> void:
 	collision_surface.set_smooth_group(-1)
 	collision_surface.set_material(TESTMATERIAL)
 	
-	
+	# TODO get air first and get visable faces then.
 	var empty = true
 	for x in chunk_size.x:
 		for y in chunk_size.y:
 			for z in chunk_size.z:
-				empty = !createBlock(Vector3(x,y,z)) and empty
+				empty = !createBlock(Vector3i(x,y,z)) and empty
 	
 	if empty:
 		return
@@ -120,21 +158,22 @@ func genMesh() -> void:
 	add_child(collision_meshInstance)
 	collision_meshInstance.create_trimesh_collision()
 	self.visible = true
+	updated = false
 
 
-func createBlock(cCord : Vector3) -> bool:
-	var cell = getCellVxl(cCord)
+func createBlock(cCord : Vector3i) -> bool:
+	var cell = getVal(cCord)
 	if cell ==0:# if the vxl is empty.
 		return false
-		
-	var mask = encoder["blocktype"]["mask"]
-	var res = cell&mask
-	var block_info = Blocks.types[Blocks.index[res-1]]
+	var t = Blocks.index[(cell&encoder["blocktype"]["mask"])-1]
+	var block_info = Blocks.types[Blocks.index[(cell&encoder["blocktype"]["mask"])-1]]
 	var hilighted = (cell & encoder["focus"]["mask"])>0
 	
 	#TODO handle the norm and rotation on the faces
 	for f in FACES.values():
-		if visable(f[1],cCord):
+		var o = getVal(cCord+f[1],true)
+		checkPair(cCord, cCord+f[1])
+		if !o&encoder["opaque"]["mask"]:
 			createFace(f[0],cCord,block_info[f[2]])
 		if hilighted:
 			var color = Color.DARK_MAGENTA
@@ -142,17 +181,12 @@ func createBlock(cCord : Vector3) -> bool:
 			createFace(f[0],cCord,Vector2(1,1),false ,1.01, color)
 	return true
 
-func visable(dir: Vector3, cCord : Vector3):
-	return !isFaceCouvered(dir, cCord)
 
-func isFaceCouvered(dir: Vector3, cCord : Vector3) -> bool:
-	return (getCellVxl(dir+cCord)&encoder["opaque"]["mask"])>0
-
-func createFace(face,cCord : Vector3, faceT: Vector2,colidable: bool = true, scale: float = 1, color: Color = Color.WHITE):
-	var a = (vertices[face[0]]*(cellSize*scale)) + (cCord * cellSize) + reset
-	var b = (vertices[face[1]]*(cellSize*scale)) + (cCord * cellSize) + reset
-	var c = (vertices[face[2]]*(cellSize*scale)) + (cCord * cellSize) + reset
-	var d = (vertices[face[3]]*(cellSize*scale)) + (cCord * cellSize) + reset
+func createFace(face,cCord : Vector3, faceT: Vector2,colidable: bool = true, rScale: float = 1, color: Color = Color.WHITE):
+	var a = (vertices[face[0]]*(cellSize*rScale)) + (cCord * cellSize) + reset
+	var b = (vertices[face[1]]*(cellSize*rScale)) + (cCord * cellSize) + reset
+	var c = (vertices[face[2]]*(cellSize*rScale)) + (cCord * cellSize) + reset
+	var d = (vertices[face[3]]*(cellSize*rScale)) + (cCord * cellSize) + reset
 	
 	
 	var uv_offset = faceT / Blocks.TEXTURE_ATLAS_SIZE
@@ -184,8 +218,8 @@ func loadVxls() -> void:
 			var dn = noise.get_noise_2d(z,x)
 			var wCord = cCordToWCord(Vector3i(x,0,z))
 			var height = 0
-			if parent != null:
-				height = parent.getHeight(wCord.x,wCord.z) - (chunk_size.y*worldPos.y)
+			if world != null:
+				height = world.getHeight(wCord.x,wCord.z) - (chunk_size.y*worldPos.y)
 			else:
 				var hn = noise.get_noise_2d(wCord.x,wCord.z)
 				height = (minY + (hn*60)) - (chunk_size.y*worldPos.y)
@@ -201,12 +235,12 @@ func loadVxls() -> void:
 				vxls[x][z][y] = b
 
 	
-func setGenParms(pos: Vector3i, seed: int, parent: Node, chunk_size: Vector3i, cell_size: float) -> void:
+func setGenParms(pos: Vector3i, genseed: int, world: World, chunk_size: Vector3i, cell_size: float) -> void:
 	self.visible = false
 	worldPos = pos
 	position = pos*chunk_size*cellSize
-	noise.seed = seed
-	self.parent = parent
+	noise.seed = genseed
+	self.world = world
 	self.chunk_size = chunk_size
 	self.cellSize = cell_size
 	self.reset = Vector3(0.5,0.5,0.5)*cellSize
@@ -217,15 +251,24 @@ func cCordToWCord(cCord: Vector3i) -> Vector3i:
 	return cCord+(worldPos*chunk_size)
 	
 	
-func getCellVxl(cCords: Vector3i) -> int:
+func getVal(cCords: Vector3i, considerWorld: bool = false) -> int:
 	var bind: Vector3i = cCords % chunk_size
 	var overflow: Vector3i = getOverflow(cCords)
 	if overflow == Vector3i(0,0,0):
 		return vxls[cCords.x][cCords.z][cCords.y]
-	#var worldCord = cCordToWCord(bind)+(overflow*chunk_size)
-	#if parent != null:
-		#return parent.get_block(worldCord)
+	if considerWorld and world != null:
+		return world.get_block((overflow*chunk_size)+bind)
 	return 0
+	
+func setVal(cCords: Vector3i, val: int, flags: int = commonflags) -> void:
+	var bind: Vector3i = cCords % chunk_size
+	#var overflow: Vector3i = getOverflow(cCords)
+	if bind != cCords:
+		return
+	if val > 0: # manage other flags including surface flag.
+		val = val | commonflags
+	vxls[cCords.x][cCords.z][cCords.y] = val
+	updated = true
 	
 func getOverflow(cCords) -> Vector3i:
 	var res = Vector3i(0,0,0)
@@ -234,22 +277,14 @@ func getOverflow(cCords) -> Vector3i:
 			res[i] = -1
 		if cCords[i] >= chunk_size[i]:
 			res[i] = 1
-	
 	return res
 
-func set_vxl(cCord: Vector3i, id: int) -> void:
-	if id > 0: # manage other flags including surface flag.
-		id = id | commonflags
-	vxls[cCord.x][cCord.z][cCord.y] = id
-	genMesh()
-
 func unHilightBlock(cCord):
-	var val = vxls[cCord.x][cCord.z][cCord.y]
-	val = val & ~(encoder["focus"]["mask"])
-	vxls[cCord.x][cCord.z][cCord.y] = val & ~(encoder["focus"]["mask"])
-	genMesh()
+	var val = getVal(cCord)
+	setVal(cCord, val & ~(encoder["focus"]["mask"]),0)
+	
 
 func hilightBlock(cCord):
 	var val = vxls[cCord.x][cCord.z][cCord.y]
-	vxls[cCord.x][cCord.z][cCord.y] = val | encoder["focus"]["mask"]
-	genMesh()
+	setVal(cCord, val | encoder["focus"]["mask"],0)
+	

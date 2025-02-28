@@ -1,5 +1,7 @@
 extends CharacterBody3D
 
+class_name Player
+
 @onready var camera_3d: Camera3D = $Boddy/Camera3D
 @onready var ray_cast_3d: RayCast3D = $Boddy/Camera3D/RayCast3D
 @onready var crossair: TextureRect = $Boddy/Camera3D/crossair
@@ -21,8 +23,11 @@ var tiltMin = deg_to_rad(-85)
 var supper = false
 var paused = false
 
-var world
+@export var world: World
 var focous
+	
+#static func createIn(world: World, pos: Vector3) -> Player:
+	
 
 func _ready() -> void:
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
@@ -129,7 +134,3 @@ func walk() -> void:
 	else:
 		velocity.x = move_toward(velocity.x, 0, speed)
 		velocity.z = move_toward(velocity.z, 0, speed)
-	
-	
-func setWorld(p):
-	world = p

@@ -55,8 +55,8 @@ const index = [STONE,DIRT,GRASS]
 
 
 
-const Blocks = {
-	"stone":{
+const blocks = {
+	STONE:{
 		"textures":[
 			{
 				TOP:Vector2(0, 1), BOTTOM:Vector2(0, 1), LEFT:Vector2(0, 1),
@@ -64,7 +64,7 @@ const Blocks = {
 			}
 		]
 	},
-	"dirt":{
+	DIRT:{
 		"textures":[
 			{
 				TOP:Vector2(2, 0), BOTTOM:Vector2(2, 0), LEFT:Vector2(2, 0),
@@ -72,7 +72,7 @@ const Blocks = {
 			}
 		]
 	},
-	"grass":{
+	GRASS:{
 		"textures":[
 			{
 				TOP:Vector2(0, 0), BOTTOM:Vector2(2, 0), LEFT:Vector2(1, 0),
@@ -80,8 +80,13 @@ const Blocks = {
 			}
 		],
 		"alchemic":{
-			"dirt":{
-				"other":"grass"
+			DIRT:{
+				"conditions":{
+					"other":{
+						Vector3i(0,1,0): 0
+					}
+				},
+				"other":3
 			}
 		}
 	}

@@ -1,0 +1,4 @@
+class ChunkData: 
+	extends Resource
+
+	

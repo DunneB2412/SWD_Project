@@ -1,5 +1,6 @@
 @tool
 extends Node3D
+class_name World
 
 const C_CHUNK = preload("res://scenes/c_chunk.tscn")
 #Members
@@ -7,7 +8,6 @@ var chunks = {}
 var updateQueue = []
 var destroyQueue = []
 var entities = []
-
 @onready var player: CharacterBody3D = $Player
 @onready var chunksNode: Node3D = $Chunks
 
@@ -17,6 +17,7 @@ var entities = []
 @export var worldY: int 
 @export var worldSeed: int = 42
 @export var simDist = 1
+@export var globalAmp = 1
 
 @export var chunkSize: Vector3i = Vector3i(32,32,32)
 @export var blockSize: float = 1
@@ -24,9 +25,8 @@ var noise_y_small: FastNoiseLite = FastNoiseLite.new()
 
 var pPos: Vector3i
 
-
 var loadThread: Thread = Thread.new()
-
+@export var updateQueueLim = 0
 
 func _ready() -> void:
 	noise_y_small.seed = worldSeed
@@ -40,14 +40,10 @@ func _ready() -> void:
 	player.position = Vector3(px, py, pz)
 	pPos = player.position
 	
-	player.setWorld(self)
-	
 	loadChunks()
-	
-	
 
 
-	loadThread.start(_threadProcess)
+	#loadThread.start(_threadProcess)
 	
 func _process(_delta: float) -> void:
 	pPos = player.position
@@ -96,9 +92,9 @@ func _threadProcess():
 						Vector3i(vec.x,bounce(vec.y),vec.z)
 					]
 					for v in next:
-						if !visited.has(v) && !queue.has(v):
+						if !visited.has(v) && !queue.has(v) && updateQueue.size() < updateQueueLim:	
 							queue.push_back(v)
-				await get_tree().create_timer(0.01).timeout
+		await get_tree().create_timer(0.01).timeout
 
 func bounce(i: int) -> int:
 	return ~i + int(i<0)
@@ -144,6 +140,7 @@ func updateChunks() -> void:
 		if c.visible: # if the chunk is ready to be used
 			chunksNode.add_child(c)
 			c.set_name("chunk:"+str(pos))
+			c.startSim()
 		else:
 			updateQueue.append(pos)
 
@@ -164,22 +161,23 @@ func get_block(wCord: Vector3i) -> int:
 	var chunk = get_Chunk(relative["chunk"])
 	if chunk == null:
 		return 0
-	return chunk.getCellVxl(relative["block"])
+	return chunk.getVal(relative["block"])
 
 func getHeight(x,z) -> int:
 	var frequency = Vector2i(1,1)
 	var offset = 60
-	var amplitude = 20
+	var amplitude = 20 * globalAmp
 	var grad = noise_y_small.get_noise_2d(x*frequency.x,z*frequency.y)
 	return offset + (grad*amplitude)
-	
-	
+
 func place_block(wCord: Vector3i, id: int) -> void:
+	if checkPresence(wCord):
+		return
 	var relative = get_relatives(scenePosToWorld(wCord))
 	var chunk = get_Chunk(relative["chunk"])
 	if chunk == null:
 		return
-	chunk.set_vxl(relative["block"],id)
+	chunk.setVal(relative["block"],id)
 
 func break_block(wCord: Vector3i) -> void:
 	place_block(wCord,0)
@@ -201,7 +199,7 @@ func get_relatives(worldPos) -> Dictionary:
 
 func scenePosToWorld(globalPos: Vector3) -> Vector3i:
 	return floor(globalPos*blockSize)
-	
+		
 func getPosFromRayCol(pos, norm):
 	return scenePosToWorld(pos-(norm*(blockSize/2)))
 
@@ -224,5 +222,13 @@ func get_Chunk(cPos: Vector3i): #use a table and actually load the chunk on the 
 	if chunks.has(cPos):
 		return chunks[cPos]["chunk"]
 	return null
-	
-	
+
+func checkPresence(wPos: Vector3i)->bool:
+	for e:CharacterBody3D in entities:
+		var pos = e.position
+		var inx = (pos.x-0.18 <=((wPos.x+1)/blockSize)) && (pos.x+0.19 >= ((wPos.x)/blockSize))
+		var iny = (pos.y-0.8 <=((wPos.y+1)/blockSize)) && (pos.y+0.8 >= ((wPos.y)/blockSize))
+		var inz = (pos.z-0.18 <=((wPos.z+1)/blockSize)) && (pos.z+0.18 >= ((wPos.z)/blockSize))
+		if inx && iny && inz:
+			return true
+	return false
