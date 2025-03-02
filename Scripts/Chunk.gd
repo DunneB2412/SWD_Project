@@ -43,6 +43,7 @@ const FACES: Dictionary = {
 
 const TESTMATERIAL = preload("res://materials/test/testmaterial.tres")
 const OUTLINE = preload("res://materials/test/outline.png")
+const MORE_ITEMS = preload("res://materials/test/moreItems.tres")
 #Members
 var vxls = []
 var ents = []
@@ -92,28 +93,87 @@ func chunkThread():
 		find_actions()
 		await get_tree().create_timer(0.5).timeout
 func find_actions():
+	#use offset grid idea.. this will still technically be 8 chose 2 
+	#or 28 unique pars but there should be no duplicate checks. 
+	#if we asume a standard chunk of 32*32*32 and check all the paris
+	# then we have 917,504 checks to perform.
+	# this will only consider extras in the positive directions. 
+	# this gows to 1,006,236 when considering neighbour chunks. 
+	# not sure i have a smart way to couver this search space.
+	# the check can be done in read only (thread safe) and can enqueue them
+	# the queued sim action needs to sote the affected pos, 
+	#the co-operating pos and the strength/ priority
 	
+	#otherwise, we can be more carefull in how we design reaction maps and 
+	#may be able to get away with 6 samples per block. totaling 196,608 checks.
+	# maybe check the reaction map first to help cut this back.
 	for x in chunk_size.x:
 		for y in chunk_size.y:
 			for z in chunk_size.z:
 				pass
-					
-func checkPair(posa, posb) -> void:
-	var ta = getVal(posa)&encoder["blocktype"]["mask"]
-	var tb = getVal(posb)&encoder["blocktype"]["mask"]
+				
+func checkPair(cCord, dir) -> void:
+	var ta = getVal(cCord)&encoder["blocktype"]["mask"]
+	var bCords = cCord+dir
+	var tb = getVal(bCords,true)&encoder["blocktype"]["mask"]
 	var pa = Blocks.blocks[Blocks.index[ta-1]]
-	if pa.has("alchemic"):
-		var alc = pa["alchemic"]
-		if alc.has(Blocks.index[tb-1]):
-			var p = alc[Blocks.index[tb-1]]
-			var passesCons = true
-			if p.has("conditions"):
-				var conditions = p["conditions"]["other"]
-				for c in conditions:
-					passesCons = getVal(posb+c) == conditions[c]
-			if passesCons && p.has("other") and !updateQueue.has(posb) and updateQueue.size()<updateQueueSize:
-				updateQueue.merge({posb:p["other"]})
+	if !pa.has("alchemic"):# is there even an alchemic map defined
+		return
 	
+	var varEnc = encoder["blocktvar"]
+	var blkVariant = (ta&varEnc["mask"])>>varEnc["offset"]
+	var alchemic = pa["alchemic"]
+	if alchemic.size()<= blkVariant: # if there is o map defined for the variant
+		return
+	
+	var varAlc = alchemic[blkVariant]
+	if !varAlc.has(dir): # if nothing is defined for the direction
+		return
+	
+	var alc = varAlc[dir]
+	var p
+	if alc.has(Blocks.index[tb-1]): # if there is no map for the other value
+		p = alc[Blocks.index[tb-1]]
+	elif  alc.has("any"): # also checks if we have a catch all.
+		p = alc["any"]
+	else:
+		return
+		
+	var passesCons = true
+	var logicMode = "or"
+	#needs to handle the following possible conditions.
+	# block type, block var, impact, heat. this is permitting 
+	if p.has("conditions"): #checks any conditions that may exist
+		passesCons = false
+		for check in p["conditions"]:
+			if check == "logic":
+				logicMode = p["conditions"][check]
+			elif check == "heat":
+				pass
+#				impliment heat check
+			elif check == "impact":
+				pass
+#				impliment impact check
+			else:
+				var pos = cCord if check == "self" else bCords
+				var conditions = p["conditions"][check]
+				for c in conditions:
+					if typeof(c)== TYPE_STRING and c == "logic":
+						logicMode = conditions[c]
+					else:
+						for mc in conditions[c]:
+							var res = readMeta(getVal(pos+c,true),mc) == conditions[c][mc]
+							if logicMode == "and":
+								passesCons = passesCons and res
+							else:
+								passesCons = passesCons or res
+	
+	if passesCons && p.has("other") and !updateQueue.has(bCords) and updateQueue.size()<updateQueueSize:
+		updateQueue.merge({bCords:p["other"]})
+		var t = getVal(bCords,true)
+	if passesCons && p.has("self") and !updateQueue.has(bCords) and updateQueue.size()<updateQueueSize:
+		updateQueue.merge({cCord:p["self"]})
+
 func genMesh() -> void:
 	
 	
@@ -171,9 +231,8 @@ func createBlock(cCord : Vector3i) -> bool:
 	
 	#TODO handle the norm and rotation on the faces
 	for f in FACES.values():
-		var o = getVal(cCord+f[1],true)
-		checkPair(cCord, cCord+f[1])
-		if !o&encoder["opaque"]["mask"]:
+		checkPair(cCord,f[1])
+		if !getVal(cCord+f[1])&encoder["opaque"]["mask"]:
 			createFace(f[0],cCord,block_info[f[2]])
 		if hilighted:
 			var color = Color.DARK_MAGENTA
@@ -245,30 +304,31 @@ func setGenParms(pos: Vector3i, genseed: int, world: World, chunk_size: Vector3i
 	self.cellSize = cell_size
 	self.reset = Vector3(0.5,0.5,0.5)*cellSize
 	loadVxls()
-	genMesh()
 
 func cCordToWCord(cCord: Vector3i) -> Vector3i:
 	return cCord+(worldPos*chunk_size)
 	
 	
 func getVal(cCords: Vector3i, considerWorld: bool = false) -> int:
-	var bind: Vector3i = cCords % chunk_size
+	var bind: Vector3i = Vector3i(posmod(cCords.x, chunk_size.x),posmod(cCords.y, chunk_size.y),posmod(cCords.z, chunk_size.z))
 	var overflow: Vector3i = getOverflow(cCords)
 	if overflow == Vector3i(0,0,0):
 		return vxls[cCords.x][cCords.z][cCords.y]
 	if considerWorld and world != null:
-		return world.get_block((overflow*chunk_size)+bind)
+		return world.get_block(((overflow+worldPos)*chunk_size)+bind)
 	return 0
 	
 func setVal(cCords: Vector3i, val: int, flags: int = commonflags) -> void:
-	var bind: Vector3i = cCords % chunk_size
-	#var overflow: Vector3i = getOverflow(cCords)
-	if bind != cCords:
+	var bind: Vector3i = Vector3i(posmod(cCords.x, chunk_size.x),posmod(cCords.y, chunk_size.y),posmod(cCords.z, chunk_size.z))
+	var overflow: Vector3i = getOverflow(cCords)
+	if overflow == Vector3i(0,0,0):
+		if val > 0: # manage other flags including surface flag.
+			val = val | commonflags
+		vxls[cCords.x][cCords.z][cCords.y] = val
+		updated = true #only updated if block is placed here.
 		return
-	if val > 0: # manage other flags including surface flag.
-		val = val | commonflags
-	vxls[cCords.x][cCords.z][cCords.y] = val
-	updated = true
+	if world != null:
+		world.place_block(((overflow+worldPos)*chunk_size)+bind, val)
 	
 func getOverflow(cCords) -> Vector3i:
 	var res = Vector3i(0,0,0)
@@ -287,4 +347,10 @@ func unHilightBlock(cCord):
 func hilightBlock(cCord):
 	var val = vxls[cCord.x][cCord.z][cCord.y]
 	setVal(cCord, val | encoder["focus"]["mask"],0)
-	
+
+func setMeta(val: int, property: String, meta: int) -> int:
+	if meta <= encoder[property]["max"] && meta >= 0:
+		return val | (meta<<encoder[property]["offset"])
+	return val
+func readMeta(val:int, property: String) -> int :
+	return (val & encoder[property]["mask"])>>encoder[property]["offset"]

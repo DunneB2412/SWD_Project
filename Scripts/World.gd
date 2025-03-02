@@ -47,6 +47,7 @@ func _ready() -> void:
 	
 func _process(_delta: float) -> void:
 	pPos = player.position
+	#print("Player at" + str(get_relatives(pPos)["chunk"]))
 	
 	if updateQueue.size()>0:
 		updateChunks()
@@ -136,12 +137,13 @@ func updateChunks() -> void:
 	var pos = updateQueue.pop_front()
 	var cd = chunks.get(pos)
 	if cd != null:
-		var c:Node3D = cd["chunk"]
+		var c:Chunk = cd["chunk"]
 		if c.visible: # if the chunk is ready to be used
 			chunksNode.add_child(c)
 			c.set_name("chunk:"+str(pos))
 			c.startSim()
 		else:
+			c.genMesh()
 			updateQueue.append(pos)
 
 func deleteChunks() -> void:
