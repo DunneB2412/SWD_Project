@@ -45,8 +45,8 @@ const TESTMATERIAL = preload("res://materials/test/testmaterial.tres")
 const OUTLINE = preload("res://materials/test/outline.png")
 const MORE_ITEMS = preload("res://materials/test/moreItems.tres")
 #Members
-var vxls = []
-var ents = []
+var vxls: Array = []
+var visable: PackedVector3Array = PackedVector3Array()
 
 #GenParamiters
 var noise: FastNoiseLite = FastNoiseLite.new()

@@ -225,6 +225,7 @@ func get_Chunk(cPos: Vector3i): #use a table and actually load the chunk on the 
 		return chunks[cPos]["chunk"]
 	return null
 
+#ref https://developer.mozilla.org/en-US/docs/Games/Techniques/3D_collision_detection
 func checkPresence(wPos: Vector3i)->bool:
 	for e:CharacterBody3D in entities:
 		var pos = e.position

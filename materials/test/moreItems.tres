@@ -1,7 +1,7 @@
 [gd_resource type="StandardMaterial3D" load_steps=2 format=3 uid="uid://ckou80ws1cqvn"]
 
-[ext_resource type="Texture2D" path="res://materials/test/TextureAtlas.dds" id="1_g2n8i"]
+[ext_resource type="Texture2D" uid="uid://crdj1m4ddm3sw" path="res://materials/test/TextureAtlasnew.png" id="1_ygbfr"]
 
 [resource]
 transparency = 1
-albedo_texture = ExtResource("1_g2n8i")
+albedo_texture = ExtResource("1_ygbfr")
