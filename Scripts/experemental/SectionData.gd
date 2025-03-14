@@ -1,5 +1,5 @@
 extends Resource
-class_name ChunkData
+class_name SectionData
 
 #ref https://www.youtube.com/watch?v=vzRZjM9MTGw
 # https://docs.godotengine.org/en/stable/tutorials/io/saving_games.html

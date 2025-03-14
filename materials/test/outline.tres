@@ -1,7 +1,0 @@
-[gd_resource type="StandardMaterial3D" load_steps=2 format=3 uid="uid://bh2mbos42f3du"]
-
-[ext_resource type="Texture2D" uid="uid://ci7g0antl8ets" path="res://materials/test/outline.png" id="1_0pq56"]
-
-[resource]
-transparency = 1
-albedo_texture = ExtResource("1_0pq56")

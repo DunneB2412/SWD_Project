@@ -2,7 +2,7 @@ extends Node
 
 
 const TEXTURE_ATLAS_SIZE = Vector2(3,2)
-
+const TEXTURE_ATLAS_SIZE2 = Vector2(8,4)
 enum {
 	TOP,
 	BOTTOM,
@@ -29,39 +29,8 @@ enum{
 }
 
 
-
-const types = {
-	DIRT:{
-		TOP:Vector2(2, 0), BOTTOM:Vector2(2, 0), LEFT:Vector2(2, 0),
-		RIGHT:Vector2(2,0), FRONT:Vector2(2, 0), BACK:Vector2(2, 0)
-	},
-	GRASS:{
-		TOP:Vector2(0, 0), BOTTOM:Vector2(2, 0), LEFT:Vector2(1, 0),
-		RIGHT:Vector2(1,0), FRONT:Vector2(1, 0), BACK:Vector2(1, 0)
-	},
-	STONE:{
-		TOP:Vector2(0, 1), BOTTOM:Vector2(0, 1), LEFT:Vector2(0, 1),
-		RIGHT:Vector2(0, 1), FRONT:Vector2(0, 1), BACK:Vector2(0, 1)
-	}
-}
-
-
-const alchemic = {
-	DIRT:{
-	},
-	GRASS:{
-		DIRT:{
-			"seld":GRASS,
-			"other":GRASS
-		}
-	},
-	STONE:{
-		TOP:Vector2(0, 1), BOTTOM:Vector2(0, 1), LEFT:Vector2(0, 1),
-		RIGHT:Vector2(0, 1), FRONT:Vector2(0, 1), BACK:Vector2(0, 1)
-	}
-}
-
 const index = [
+	AIR,
 	STONE, #1
 	DIRT, #2
 	GRASS, #3
@@ -99,40 +68,62 @@ const blocks = {
 		],
 		"alchemic":[
 			{
+				Vector3i(0,0,0):{ #allow checking it's self
+					DIRT:[
+							{
+							"conditions":{
+								"heat":{
+									"low": 120
+								}
+							},
+							"self": 4
+						}
+					]
+					
+				},
 				Vector3i(0,1,0):{
-					AIR:{
-						"conditions":{
-							"other":{
-								"logic" : "or",
-								Vector3i(1,0,0): {"blocktype": 3},
-								Vector3i(-1,0,0): {"blocktype": 3},
-								Vector3i(0,0,1): {"blocktype": 3},
-								Vector3i(0,0,-1): {"blocktype": 3}
-							}
-						},
-						"self":3
-					}
+					AIR:[
+						{
+							"conditions":{
+								"other":{
+									"logic" : "or",
+									Vector3i(1,0,0): {"blocktype": 3,"blocktvar": 0},
+									Vector3i(-1,0,0): {"blocktype": 3,"blocktvar": 0},
+									Vector3i(0,0,1): {"blocktype": 3,"blocktvar": 0},
+									Vector3i(0,0,-1): {"blocktype": 3,"blocktvar": 0}
+								}
+							},
+							"self":3
+						}
+					]
 				},
 				Vector3i(0,-1,0):{
-					AIR:{
-						"impact": 3
-					},
-					"any":{
-						"conditions":{
-							"other":{
-								"logic" : "or",
-								Vector3i(1,0,0): {"blocktype": 3},
-								Vector3i(-1,0,0): {"blocktype": 3},
-								Vector3i(0,0,1): {"blocktype": 3},
-								Vector3i(0,0,-1): {"blocktype": 3}
+					"any":[
+						{
+							"conditions":{
+								"other":{
+									"logic" : "or",
+									Vector3i(1,0,0): {"blocktype": 3,"blocktvar": 0},
+									Vector3i(-1,0,0): {"blocktype": 3,"blocktvar": 0},
+									Vector3i(0,0,1): {"blocktype": 3,"blocktvar": 0},
+									Vector3i(0,0,-1): {"blocktype": 3,"blocktvar": 0}
+								},
+								"logic": "and",
+								"self":{
+									Vector3i(0,1,0): {"blocktype": 0}, # make sure it is not smothered.
+								}
 							},
-							"logic": "and",
-							"self":{
-								Vector3i(0,1,0): {"blocktype": 0}, # make sure it is not smothered.
-							}
+							"self":3
 						},
-						"self":3
-					}
+						{
+							"conditions":{
+								"other":{
+									Vector3i(0,0,0):{"opaque": 1}
+								}
+							},
+							"impact": 3
+						}
+					]
 				}
 			}
 		]
@@ -151,91 +142,125 @@ const blocks = {
 		"alchemic":[
 			{
 				Vector3i(0,0,0):{ #allow checking it's self
-					GRASS:{ # we still need to make sure we are looking at grass because the rest of the system.
-						"conditions":{
-							"heat":{
-								Vector3i(0,0,0):120
-							}
+					GRASS:[
+							{ # we still need to make sure we are looking at grass because the rest of the system.
+							"conditions":{
+								"heat":{
+									"low":120
+								}
+							},
+							"self": 4
 						},
-						"self": 4
-					},
-					"any":{
-						"conditions":{
-							"heat":{
-								Vector3i(0,0,0):-1
-							}
-						},
-						"self": 3 | (1<<10) # encode the block variant. frossen grass
-					}
+						{
+							"conditions":{
+								"heat":{
+									"high":-1
+								},
+								"logic": "and",
+								"self":{
+									Vector3i(0,0,0):{"blocktvar": 0}
+								}
+							},
+							"self": 3 | (1<<10) # encode the block variant. frossen grass
+						}
+					]
 					
 				},
 				Vector3i(0,1,0):{
-					"any":{ #should smuther grass if it is couvered by anything solid. 
-						"conditions":{
-							"other":{
-								Vector3i(0,1,0):{"opaque": 1}
-							}
-						},
-						"self":2
-					}
+					"any":[
+						{ #should smuther grass if it is couvered by anything solid. 
+							"conditions":{
+								"other":{
+									Vector3i(0,0,0):{"opaque": 1}
+								}
+							},
+							"self":2
+						}
+					]
 				},
 				Vector3i(0,-1,0):{
-					AIR:{"impact": 3}
+					AIR:[{"impact": 3}]
 					
 				},
 				Vector3i(1,0,0):{
-					DIRT:{
-						"conditions":{
-							"other":{
-								Vector3i(0,1,0): {"blocktype": 0}
-							}
-						},
-						"other":3
-					}
+					DIRT:[
+						{
+							"conditions":{
+								"other":{
+									Vector3i(0,1,0): {"blocktype": 0}
+								}
+							},
+							"other":3
+						}
+					]
 				},
 				Vector3i(-1,0,0):{
-					DIRT:{
-						"conditions":{
-							"other":{
-								Vector3i(0,1,0): {"blocktype": 0}
-							}
-						},
-						"other":3
-					}
+					DIRT:[
+						{
+							"conditions":{
+								"other":{
+									Vector3i(0,1,0): {"blocktype": 0}
+								}
+							},
+							"other":3
+						}
+					]
 				},
 				Vector3i(0,0,1):{
-					DIRT:{
-						"conditions":{
-							"other":{
-								Vector3i(0,1,0): {"blocktype": 0}
-							}
-						},
-						"other":3
-					}
+					DIRT:[
+						{
+							"conditions":{
+								"other":{
+									Vector3i(0,1,0): {"blocktype": 0}
+								}
+							},
+							"other":3
+						}
+					]
 				},
 				Vector3i(0,0,-1):{
-					DIRT:{
-						"conditions":{
-							"other":{
-								Vector3i(0,1,0): {"blocktype": 0}
-							}
-						},
-						"other":3
-					}
+					DIRT:[
+						{
+							"conditions":{
+								"other":{
+									Vector3i(0,1,0): {"blocktype": 0}
+								}
+							},
+							"other":3
+						}
+					]
 				}
 			},
 			{
-				Vector3i(0,0,0):{ #allow checking it's self
-					GRASS:{
-						"conditions":{ #let the grass taw back out.
-							"heat":{
-								Vector3i(0,0,0):1
-							}
-						},
-						"self": 3
-					}
-					
-				}
+				Vector3i(0,0,0):{ 
+					GRASS:[
+						{
+							"conditions":{ #let the grass taw back out.
+								"heat":{
+									"low":1
+								},
+								"logic": "and",
+								"self":{
+									Vector3i(0,0,0):{"blocktvar": 1}
+								}
+								
+							},
+							"self": 3
+						}
+					]
+				},
+				Vector3i(0,1,0):{
+					"any":[
+						{ #should smuther grass if it is couvered by anything solid. 
+							"conditions":{
+								"other":{
+									Vector3i(0,0,0):{"opaque": 1}
+								}
+							},
+							"self":2
+						}
+					]
+				},
 			}
 		]
 	},
@@ -244,6 +269,32 @@ const blocks = {
 			{
 				TOP:Vector2(2, 2), BOTTOM:Vector2(2, 2), LEFT:Vector2(2, 2),
 				RIGHT:Vector2(2, 2), FRONT:Vector2(2, 2), BACK:Vector2(2, 2)
+			}
+		],
+		"alchemic":[
+			{
+				Vector3i(0,0,0):{ 
+					SAND:[
+						{
+							"conditions":{
+								"heat":{ # test constant temp increase
+									"low":200
+								}
+								
+							},
+							"self": 0
+						},
+						{
+							"conditions":{
+								"heat":{ # test constant temp increase
+									"low":1
+								}
+								
+							},
+							"heat": 3
+						}
+					]
+				}
 			}
 		]
 	},

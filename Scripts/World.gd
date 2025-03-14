@@ -2,7 +2,6 @@
 extends Node3D
 class_name World
 
-const C_CHUNK = preload("res://scenes/c_chunk.tscn")
 #Members
 var chunks = {}
 var updateQueue = []
@@ -49,16 +48,17 @@ func _process(_delta: float) -> void:
 	pPos = player.position
 	#print("Player at" + str(get_relatives(pPos)["chunk"]))
 	
-	if updateQueue.size()>0:
-		updateChunks()
-	if destroyQueue.size()>0:
-		deleteChunks()
+	#if updateQueue.size()>0:
+		#updateChunks()
+	#if destroyQueue.size()>0:
+		#deleteChunks()
+	checkChunks()
 	
 func _threadProcess():
 	var oldPlayerChunk = get_relatives(pPos)["chunk"]
-	while(true):
-		var playerChunk = get_relatives(pPos)["chunk"]
-		if playerChunk != oldPlayerChunk:
+	if(true):
+		var playerChunk: Vector3i  = get_relatives(pPos)["chunk"]
+		if playerChunk != oldPlayerChunk || true:
 			oldPlayerChunk = playerChunk
 			for pos in chunks:
 				var val = chunks[pos]
@@ -71,12 +71,12 @@ func _threadProcess():
 			
 			var queue = [Vector3i(0,0,0)]
 			var visited = []
-			while !queue.is_empty() and playerChunk == oldPlayerChunk:
+			while !queue.is_empty():
 				var vec = queue.pop_front()
 				playerChunk = get_relatives(pPos)["chunk"]
 				#if the vector is within the render distance.
-				if(vec.x<(worldSize.x>>1)&&vec.y<(worldSize.y>>1)&&vec.z<(worldSize.z>>1)):
-					visited.append(vec)
+				if(playerChunk.distance_to(vec)<32):
+					
 					var ox = playerChunk.x + vec.x 
 					var oz = playerChunk.z + vec.z
 					var wx = (ox*chunkSize.x) + (chunkSize.x>>1) # sample thge midle
@@ -86,6 +86,7 @@ func _threadProcess():
 					var cPos = Vector3i(ox,oy,oz)
 					#TODO use gen queue, allow gen threads to work on the gen queue and sen them to update queue
 					createChunk(cPos)
+					visited.append(vec)
 					var next = [
 						Vector3i(bounce(vec.x),vec.y,vec.z),
 						Vector3i(vec.x,vec.y,bounce(vec.z)),
@@ -93,45 +94,45 @@ func _threadProcess():
 						Vector3i(vec.x,bounce(vec.y),vec.z)
 					]
 					for v in next:
-						if !visited.has(v) && !queue.has(v) && updateQueue.size() < updateQueueLim:	
+						if !visited.has(v) && !queue.has(v):	
 							queue.push_back(v)
+					
 		await get_tree().create_timer(0.01).timeout
 
 func bounce(i: int) -> int:
 	return ~i + int(i<0)
 func loadChunks():
 	var playerChunk = get_relatives(pPos)["chunk"]
-	#print("Creating chunks at " + str(playerChunk) )
 	var preload_range = 2
 	for i in preload_range:
 		for j in preload_range:
-			for k in preload_range:
+			for k in preload_range*globalAmp:
 				var x = playerChunk.x +(i -(preload_range>>1))
 				var z = playerChunk.z + (j -(preload_range>>1))
 				var wx = (x*chunkSize.x) + (chunkSize.x>>1) # sample thge midle
 				var wz = (z*chunkSize.z) + (chunkSize.z>>1)
 				var wy = getHeight(wx,wz)
-				var y = floor(wy/chunkSize.y) + (k -(preload_range>>1))
+				var y = floor(wy/chunkSize.y) + (k -((preload_range*globalAmp)>>1))
 				
 				var pos = Vector3i(x,y,z)
-				#print("creating chunk " + str(pos))
 				createChunk(pos)
 				
 	while updateQueue.size()>0:
 		updateChunks()
 
-func createChunk(pos: Vector3i) -> void:
+func createChunk(pos: Vector3i) -> bool:
 	if !chunks.has(pos):
 		if not(updateQueue.has(pos)):
 			#var t = Thread.new()
 			#t.start(createChunk.bind(cPos))
 			#loaders.append(t)
-			var chunk = C_CHUNK.instantiate()
-			chunk.setGenParms(pos, worldSeed, self, chunkSize, blockSize)
-			chunks.merge({pos:{"chunk":chunk,"life":20}})
+			var chunk = Chunk.new(pos, worldSeed, self, chunkSize, blockSize)
+			chunks.merge({pos:{"chunk":chunk,"life":20, "placed": false}})
 			updateQueue.append(pos)
+			return true
 	else:
-		chunks[pos]["life"] = 20 # reset timer
+		chunks[pos]["life"] = 20 # reset time
+	return false
 
 func updateChunks() -> void:
 	var pos = updateQueue.pop_front()
@@ -141,10 +142,27 @@ func updateChunks() -> void:
 		if c.visible: # if the chunk is ready to be used
 			chunksNode.add_child(c)
 			c.set_name("chunk:"+str(pos))
+			cd["placed"] = true
 			c.startSim()
 		else:
 			c.genMesh()
 			updateQueue.append(pos)
+			
+func checkChunks() -> void:
+	var playerChunk: Vector3i = get_relatives(pPos)["chunk"]
+	for pos in chunks:
+		var chunk = chunks[pos]
+		if playerChunk.distance_to(pos) > 32:
+			chunks.erase(pos)
+			chunk["chunk"].queue_free()
+		if !chunk["placed"]:
+			if chunk["chunk"].visible:
+				chunksNode.add_child(chunk["chunk"])
+				chunk["chunk"].set_name("chunk:"+str(pos))
+				chunk["placed"] = true
+			else:
+				chunk["chunk"].genMesh()
+				return
 
 func deleteChunks() -> void:
 	var pos = destroyQueue.pop_front()
@@ -165,6 +183,21 @@ func get_block(wCord: Vector3i) -> int:
 		return 0
 	return chunk.getVal(relative["block"])
 
+func getTemp(wCord: Vector3i) -> float:
+	var relative = get_relatives(wCord)
+	var chunk = get_Chunk(relative["chunk"])
+	if chunk == null:
+		return 0
+	return chunk.getTemp(relative["block"])
+
+func setTemp(wCord: Vector3i, val:float):
+	var relative = get_relatives(wCord)
+	var chunk = get_Chunk(relative["chunk"])
+	if chunk == null:
+		return
+	chunk.setTemp(relative["block"],val)
+	#chunk.updated = true
+
 func getHeight(x,z) -> int:
 	var frequency = Vector2i(1,1)
 	var offset = 60
@@ -173,16 +206,22 @@ func getHeight(x,z) -> int:
 	return offset + (grad*amplitude)
 
 func place_block(wCord: Vector3i, id: int) -> void:
-	if checkPresence(wCord):
+	if checkPresence(wCord) && id !=0:
 		return
 	var relative = get_relatives(scenePosToWorld(wCord))
 	var chunk = get_Chunk(relative["chunk"])
 	if chunk == null:
+		createChunk(relative["chunk"])
 		return
 	chunk.setVal(relative["block"],id)
 
 func break_block(wCord: Vector3i) -> void:
 	place_block(wCord,0)
+	
+func updateChunk(cPos: Vector3i) -> void:
+	var chunk = get_Chunk(cPos)
+	if chunk != null:
+		chunk.updated = true
 	
 func get_relatives(worldPos) -> Dictionary:
 	var chunk = Vector3i(0,0,0)
@@ -205,19 +244,19 @@ func scenePosToWorld(globalPos: Vector3) -> Vector3i:
 func getPosFromRayCol(pos, norm):
 	return scenePosToWorld(pos-(norm*(blockSize/2)))
 
-func hilight_block(wCord: Vector3i) -> void:
+func hilight_block(wCord: Vector3i, norm: Vector3i) -> void:
 	var relative = get_relatives(scenePosToWorld(wCord))
 	var chunk = get_Chunk(relative["chunk"])# protect out of bounds
 	if chunk == null:
 		return
-	chunk.hilightBlock(relative["block"])
+	chunk.hilightBlock(relative["block"], norm)
 	
 func unHilightBlock(wCord: Vector3i) -> void:
 	var relative = get_relatives(scenePosToWorld(wCord))
 	var chunk = get_Chunk(relative["chunk"])# protect out of bounds
 	if chunk == null:
 		return
-	chunk.unHilightBlock(relative["block"])
+	chunk.unHilightBlock()
 	
 	
 func get_Chunk(cPos: Vector3i): #use a table and actually load the chunk on the request.
@@ -227,6 +266,8 @@ func get_Chunk(cPos: Vector3i): #use a table and actually load the chunk on the 
 
 #ref https://developer.mozilla.org/en-US/docs/Games/Techniques/3D_collision_detection
 func checkPresence(wPos: Vector3i)->bool:
+	if get_block(wPos) != 0:
+		return true
 	for e:CharacterBody3D in entities:
 		var pos = e.position
 		var inx = (pos.x-0.18 <=((wPos.x+1)/blockSize)) && (pos.x+0.19 >= ((wPos.x)/blockSize))

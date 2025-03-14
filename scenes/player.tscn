@@ -1,8 +1,8 @@
-[gd_scene load_steps=8 format=3 uid="uid://c05ub2i700151"]
+[gd_scene load_steps=11 format=3 uid="uid://c05ub2i700151"]
 
 [ext_resource type="Texture2D" uid="uid://bqp1bvxh20nm5" path="res://assets/crosshair161.png" id="2_xmgmu"]
+[ext_resource type="PackedScene" uid="uid://bsn8u6l6vaav3" path="res://scenes/item.tscn" id="3_80y2t"]
 [ext_resource type="Script" path="res://Scripts/crossair.gd" id="3_yniyc"]
-[ext_resource type="Material" uid="uid://cawswvxy7gqtx" path="res://materials/hilight.tres" id="4_0kx4h"]
 
 [sub_resource type="GDScript" id="GDScript_r2jjo"]
 script/source = "extends CharacterBody3D
@@ -18,6 +18,9 @@ class_name MyPlayer
 @onready var block_outline: MeshInstance3D = $BlockOutline
 @onready var boddy: Node3D = $Boddy
 
+@onready var rich_text_label: RichTextLabel = $Boddy/Camera3D/RichTextLabel
+
+
 #@onready var grid_map: GridMap = $\"../GridMap\"
 
 const SPEED = 5.0
@@ -32,6 +35,7 @@ var paused = false
 
 @export var world: Node3D
 var focous
+var fnorm
 
 func _ready() -> void:
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
@@ -58,6 +62,9 @@ func _physics_process(delta: float) -> void:
 	if Input.is_action_just_pressed(\"hyperSpeed\"):
 		supper = !supper
 		collision_shape_3d.disabled = supper
+		
+	rich_text_label.clear()
+	rich_text_label.add_text(str(position)+\"\\n\"+str(Engine.get_frames_per_second()))
 	
 	#standard
 	grvity(delta)
@@ -68,6 +75,7 @@ func _physics_process(delta: float) -> void:
 	ray_cast()
 	
 
+	
 	move_and_slide()
 
 func ray_cast()-> void:
@@ -89,11 +97,14 @@ func world_clicks(pos,norm):
 	var wCord = world.getPosFromRayCol(pos,norm)
 	var blk = world.get_block(wCord)
 	if blk != 0: #make sure we are looking at a block
-		if focous != wCord:
+		if focous != wCord || fnorm != norm:
 			if focous != null:
 				world.unHilightBlock(focous)
 			focous = wCord
-			world.hilight_block(focous)
+			fnorm = norm
+			world.hilight_block(focous, norm)
+		var temp = world.getTemp(wCord)
+		rich_text_label.add_text(\"\\n\\nLooking at \"+str(focous)+\": Type =\"+str(blk&0x03ff)+\" Var =\"+str((blk&0x07c00)>>10)+\", Temp =\"+str(temp))
 		if Input.is_action_just_pressed(\"leftMouse\"):
 			world.break_block(focous)
 		if Input.is_action_just_pressed(\"rightMouse\"):
@@ -147,9 +158,19 @@ height = 1.9
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_3alwu"]
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_x66je"]
+transparency = 1
+albedo_color = Color(0.286275, 0.313726, 0.333333, 0.756863)
+
 [sub_resource type="BoxMesh" id="BoxMesh_42bdt"]
-material = ExtResource("4_0kx4h")
+material = SubResource("StandardMaterial3D_x66je")
 size = Vector3(1.01, 1.01, 1.01)
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_0swoi"]
+blend_mode = 2
+
+[sub_resource type="Theme" id="Theme_p4qux"]
+default_font_size = 20
 
 [node name="Player" type="CharacterBody3D"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.02701, 0)
@@ -192,3 +213,15 @@ pivot_offset = Vector2(32, 32)
 texture = ExtResource("2_xmgmu")
 script = ExtResource("3_yniyc")
 metadata/_edit_use_anchors_ = true
+
+[node name="Item" parent="Boddy/Camera3D" instance=ExtResource("3_80y2t")]
+visible = false
+
+[node name="RichTextLabel" type="RichTextLabel" parent="Boddy/Camera3D"]
+material = SubResource("CanvasItemMaterial_0swoi")
+offset_right = 521.0
+offset_bottom = 652.0
+theme = SubResource("Theme_p4qux")
+text = "test"
+fit_content = true
+scroll_active = false

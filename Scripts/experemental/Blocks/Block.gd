@@ -28,7 +28,7 @@ const vertices = [
 	Vector3(-0.5,0.5,0.5), #6 top back right
 	Vector3(0.5,0.5,0.5)  #7 top front right
 ]
-var reset = Vector3(0.5,0.5,0.5)
+
 const FACES: Dictionary = {
 	"top":[[6,2,7,3], Vector3i(0,1,0),Blocks.TOP],
 	"bottom":[[1,0,5,4],Vector3i(0,-1,0),Blocks.BOTTOM],
@@ -44,6 +44,51 @@ static func setMeta(val: int, property: String, meta: int) -> int:
 	return val
 static func readMeta(val:int, property: String) -> int :
 	return (val & encoder[property]["mask"])>>encoder[property]["offset"]
+	
 
-
-#TODO set up the block class. 
+#func genArrayMesh(value: int, size:float, pos:Vector3) -> bool:
+	#if value ==0:# if the vxl is empty.
+		#return false
+		#
+	##var hilighted = (value & encoder["focus"]["mask"])>0 handle this elsewhere
+	#
+	##TODO handle the norm and rotation on the faces
+	#var blockT = readMeta(value,"blocktype")
+	#var blockV = readMeta(value,"blocktvar")
+	#var norm = readMeta(value,"norm")
+	#var bockTextures = Blocks.blocks[Blocks.index[blockT]]["textures"][blockV]
+	#
+	#for f in FACES.values():
+		##checkPair(cCord,f[1])
+		##if !getVal(cCord+f[1])&encoder["opaque"]["mask"]:
+			#createFace(f[0],pos,bockTextures[f[2]])
+		##if hilighted:
+			##var color = Color.DARK_MAGENTA
+			##color.a8 = 100
+			##createFace(f[0],cCord,Vector2(4,2),false ,1.01, color)
+	#return true
+	#
+#
+#func createFace(face,cCord : Vector3, faceT: Vector2, rScale: float = 1, ):
+	#var a = (vertices[face[0]]*(cellSize*rScale)) + (cCord * cellSize) + reset
+	#var b = (vertices[face[1]]*(cellSize*rScale)) + (cCord * cellSize) + reset
+	#var c = (vertices[face[2]]*(cellSize*rScale)) + (cCord * cellSize) + reset
+	#var d = (vertices[face[3]]*(cellSize*rScale)) + (cCord * cellSize) + reset
+	#
+	#
+	#var uv_offset = faceT / Blocks.TEXTURE_ATLAS_SIZE2
+	#var height = 1.0 / Blocks.TEXTURE_ATLAS_SIZE2.y
+	#var width = 1.0 / Blocks.TEXTURE_ATLAS_SIZE2.x
+	#
+	#var uv_a = uv_offset + Vector2(0, 0)
+	#var uv_b = uv_offset + Vector2(0, height)
+	#var uv_c = uv_offset + Vector2(width, height)
+	#var uv_d = uv_offset + Vector2(width, 0)
+	#
+	#if colidable:
+		#collision_surface.add_triangle_fan(([a,b,c]),([uv_b,uv_c,uv_a]),([color,color,color]))
+		#collision_surface.add_triangle_fan(([d,c,b]),([uv_d,uv_a,uv_c]),([color,color,color]))
+	#else:
+		#texture_surface.add_triangle_fan(([a,b,c]),([uv_b,uv_c,uv_a]),([color,color,color]))
+		#texture_surface.add_triangle_fan(([d,c,b]),([uv_d,uv_a,uv_c]),([color,color,color]))
+	

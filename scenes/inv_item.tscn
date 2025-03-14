@@ -1,0 +1,33 @@
+[gd_scene load_steps=2 format=3 uid="uid://c60mqrloyl2pp"]
+
+[sub_resource type="GDScript" id="GDScript_8q4fg"]
+script/source = "extends SubViewport
+
+@onready var c_chunk: Chunk = $Node3D/CChunk
+@export var id: int = 3
+
+# Called when the node enters the scene tree for the first time.
+func _ready() -> void:
+	c_chunk.setVal(Vector3i(0,0,0),id)
+
+
+# Called every frame. 'delta' is the elapsed time since the previous frame.
+func _process(delta: float) -> void:
+	pass
+"
+
+[node name="BlockItem" type="SubViewport"]
+script = SubResource("GDScript_8q4fg")
+id = 2
+
+[node name="Node3D" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.00144637, 0.0014841, 0.000993133)
+
+[node name="Camera3D" type="Camera3D" parent="Node3D"]
+transform = Transform3D(0.573576, -0.409576, 0.709407, 0, 0.866025, 0.5, -0.819152, -0.286788, 0.496732, 1.6, 1.2, 1.2)
+current = true
+
+[node name="focous" type="MeshInstance3D" parent="Node3D"]
+
+[node name="OmniLight3D" type="OmniLight3D" parent="Node3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, -1)

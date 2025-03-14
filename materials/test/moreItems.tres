@@ -3,5 +3,9 @@
 [ext_resource type="Texture2D" uid="uid://crdj1m4ddm3sw" path="res://materials/test/TextureAtlasnew.png" id="1_ygbfr"]
 
 [resource]
-transparency = 1
+transparency = 4
+shading_mode = 2
+vertex_color_is_srgb = true
 albedo_texture = ExtResource("1_ygbfr")
+texture_filter = 0
+texture_repeat = false

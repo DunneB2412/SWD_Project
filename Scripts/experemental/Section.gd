@@ -1,6 +1,6 @@
 extends MeshInstance3D
 
-var data:ChunkData
+var data:SectionData
 var cords: Vector3i
 var size: Vector3i
 var cellSize: float
@@ -14,7 +14,7 @@ func _init(cords,size,cellSize) -> void:
 	self.cords = cords
 	self.size = size
 	self.cellSize = cellSize
-	data = ChunkData.new(size,str(cords))
+	data = SectionData.new(size,str(cords))
 	# prepare/load data
 	# prepare load mesh
 	
