@@ -38,5 +38,4 @@ func _ready() -> void:
 	st.generate_normals(false)
 	st.commit(mesh)
 	meshinstance.set_mesh(mesh)
-	#meshinstance.texture = TEXTURE_ATLASNEW
 	add_child(meshinstance)

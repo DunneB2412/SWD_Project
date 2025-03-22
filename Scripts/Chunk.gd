@@ -4,19 +4,36 @@ class_name Chunk
 #masks for world encoding.
 #all 32 bits accounted for 
 const encoder = {
-	"focus": 		{"mask":0x80000000,"max":1      , "offset": 31}, # 1000 0000 0000 0000 0000 0000 0000 0000
-	"sky":   		{"mask":0x40000000,"max":1      , "offset": 30}, # 0100 0000 0000 0000 0000 0000 0000 0000
-	"clickable":  	{"mask":0x20000000,"max":1      , "offset": 29}, # 0010 0000 0000 0000 0000 0000 0000 0000
-	"opaque":		{"mask":0x10000000,"max":1      , "offset": 28}, # 0001 0000 0000 0000 0000 0000 0000 0000
-	"simulate":		{"mask":0x08000000,"max":1      , "offset": 27}, # 0000 1000 0000 0000 0000 0000 0000 0000
-	"solid":		{"mask":0x04000000,"max":1      , "offset": 26}, # 0000 0100 0000 0000 0000 0000 0000 0000
-	"blocktype":	{"mask":0x000003ff,"max":0x03ff , "offset": 00}, # 0000 0000 0000 0000 0000 0011 1111 1111
-	"blocktvar":	{"mask":0x00007c00,"max":0x001f , "offset": 10}, # 0000 0000 0000 0000 0111 1100 0000 0000
-	"norm":			{"mask":0x00038000,"max":0x0007 , "offset": 15}, # 0000 0000 0000 0011 1000 0000 0000 0000
-	"rotation": 	{"mask":0x000c0000,"max":0x0003 , "offset": 17}, # 0000 0000 0000 1100 0000 0000 0000 0000
-	"strain":		{"mask":0x00f00000,"max":0x000f , "offset": 20}, # 0000 0000 1111 0000 0000 0000 0000 0000
-	"pcounter": 	{"mask":0x03000000,"max":0x0003 , "offset": 24}  # 0000 0011 0000 0000 0000 0000 0000 0000
+	"airAbove": 		{"mask":0x0000000080000000,"max":1      , "offset": 31}, # 1000 0000 0000 0000 0000 0000 0000 0000
+	"airBelow":   	{"mask":0x0000000040000000,"max":1      , "offset": 30}, # 0100 0000 0000 0000 0000 0000 0000 0000
+	"clickable":  	{"mask":0x0000000020000000,"max":1      , "offset": 29}, # 0010 0000 0000 0000 0000 0000 0000 0000
+	"opaque":		{"mask":0x0000000010000000,"max":1      , "offset": 28}, # 0001 0000 0000 0000 0000 0000 0000 0000
+	"visable":		{"mask":0x0000000008000000,"max":1      , "offset": 27}, # 0000 1000 0000 0000 0000 0000 0000 0000
+	"solid":			{"mask":0x0000000004000000,"max":1      , "offset": 26}, # 0000 0100 0000 0000 0000 0000 0000 0000
+	"blocktype":		{"mask":0x00000000000003ff,"max":0x03ff , "offset": 00}, # 0000 0000 0000 0000 0000 0011 1111 1111
+	"blocktvar":		{"mask":0x0000000000007c00,"max":0x001f , "offset": 10}, # 0000 0000 0000 0000 0111 1100 0000 0000
+	"norm":			{"mask":0x0000000000038000,"max":0x0007 , "offset": 15}, # 0000 0000 0000 0011 1000 0000 0000 0000
+	"rotation": 		{"mask":0x00000000000c0000,"max":0x0003 , "offset": 17}, # 0000 0000 0000 1100 0000 0000 0000 0000
+	"strain":		{"mask":0x0000000000f00000,"max":0x000f , "offset": 20}, # 0000 0000 1111 0000 0000 0000 0000 0000
+	"permuable": 	{"mask":0x0000000001000000,"max":0x0001 , "offset": 24},  # 0000 0011 0000 0000 0000 0000 0000 0000
+	"spare1"	:		{"mask":0x0000000002000000,"max":0x0001 , "offset": 24},
+	"mass":			{"mask":0x03ffffff00000000,"max":0x03ffffff, "offset":32},
+	"phase":			{"mask":0x0c00000000000000,"max":0x0003 , "offset":58},
+	"pcounter":		{"mask":0x3000000000000000,"max":0x0003 , "offset":60},
+	"spare2"	:		{"mask":0x4000000000000000,"max":0x0001 , "offset": 24},
+	#"spare3"	:		{"mask":0x8000000000000000,"max":0x0001 , "offset": 24} apparently this dosent fit in 64 bits guess sine is reserved.
 }
+
+# 2  bits for phase, solid, liquid, gass. i will use the last to encode paste. this is half solid, half liquid.
+#airAbove, Air Below, visable. this is 3
+#take away, focous, sky and simulate, this is -3
+#densist material is osmium at 40,700 kg per m3 according to below article
+#https://www.nuclear-power.com/nuclear-engineering/thermodynamics/thermodynamic-properties/what-is-density-physics/densest-materials-on-the-earth/
+# it may be best to use gram as smallest mass unit and 26 bits, this allows up to 66 ton, even allowing for fictional more dence materials.
+# we have 4 remaining bits...
+# if we give 2 to block var we can have 4k types. 
+# 2 for emergancy. 
+
 const commonflags = 0x14000000
 
 # corner transforms
@@ -64,6 +81,8 @@ var visable: PackedVector3Array = PackedVector3Array()
 var focous
 var f_norm: Vector3i
 
+
+
 #GenParamiters
 var noise: FastNoiseLite = FastNoiseLite.new()
 @export var chunk_size: Vector3i = Vector3i(32,32,32)
@@ -84,7 +103,6 @@ var linesTool: SurfaceTool = SurfaceTool.new()
 
 var updateQueue: Dictionary = {}
 @export var updateQueueSize = 16
-var checkerThread: Thread = Thread.new()
 
 var updated = false
 
@@ -99,44 +117,41 @@ func _init(pos: Vector3i, genseed: int, world: Node, chunk_size: Vector3i, cell_
 	self.reset = Vector3(0.5,0.5,0.5)*cell_size
 	loadVxls()
 
-	
-var clk = 0
-
 func _ready() -> void:
 	noise.seed = genSeed
 	updateQueue = {}
 	loadVxls()
 	genMesh()
-	clk = 0
 	reset = reset*cellSize
+	FACES.make_read_only()
 
 func _process(_delta: float) -> void:
 	for pos in updateQueue:
 		setVal(pos, updateQueue[pos])
 		updateQueue.erase(pos)
-	if updated or clk>20:
+	if updated:
 		genMesh()
-		clk = 0
-	#clk += 1
 
-func startSim():
-	pass
-	#checkerThread.start(chunkThread)
 	
-func chunkThread():
-	while true:
-		find_actions()
-		await get_tree().create_timer(0.5).timeout
 func find_actions():
+	var checkOffsets = [Vector3i(0,0,0),Vector3i(1,0,0),Vector3i(-1,0,0),Vector3i(0,1,0),Vector3i(0,-1,0),Vector3i(0,0,1),Vector3i(0,0,-1)]
+	if updated:
+		return
 	for x in chunk_size.x:
 		for y in chunk_size.y:
 			for z in chunk_size.z:
-				checkPair(Vector3i(x,y,z),Vector3i(0,0,0)) #check Self
-				for f in FACES:
-					checkPair(Vector3i(x,y,z),f[1])
+				var pos = Vector3i(x,y,z)
+				if getVal(pos)&encoder["blocktype"]["mask"] !=0:
+					for offset in checkOffsets:
+						checkPair(pos,offset)
+						tempSpread(pos,offset)
+				#else:
+					#setVal(pos,0,0)
 				
 func checkPair(cCord, dir) -> void:
 	var ta = getVal(cCord)&encoder["blocktype"]["mask"]
+	if ta == 0:
+		return
 	var bCords = cCord+dir
 	var tb = getVal(bCords,true)&encoder["blocktype"]["mask"]
 	var pa = Blocks.blocks[Blocks.index[ta]]
@@ -153,7 +168,7 @@ func checkPair(cCord, dir) -> void:
 		return
 	
 	var alc = varAlc[dir]
-	var pair_actions
+	var pair_actions: Array
 	if alc.has(Blocks.index[tb]): # if there is no map for the other value
 		pair_actions = alc[Blocks.index[tb]]
 		#if (tb == 0 && ta == 2):
@@ -167,9 +182,10 @@ func checkPair(cCord, dir) -> void:
 	
 	#needs to handle the following possible conditions.
 	# block type, block var, impact, heat. this is permitting 
-	for action in pair_actions:
+	for i in pair_actions.size():
 		var passesCons = true
 		var logicMode = "or"
+		var action = pair_actions[i]
 		if action.has("conditions"): #checks any conditions that may exist
 			passesCons = false
 			for check in action["conditions"]:
@@ -241,7 +257,6 @@ func genMesh() -> void:
 			for z in chunk_size.z:
 				if createBlock(Vector3i(x,y,z)):
 					empty = false
-					#visable.append(Vector3(x,y,z)) 
 	
 	if ! empty:
 		commitMesh(texture_surface)
@@ -283,10 +298,7 @@ func createBlock(cCord : Vector3i) -> bool:
 	var hilighted = focous == cCord
 	
 	var res = false
-	checkPair(cCord,Vector3i(0,0,0))
 	for f in FACES.values():
-		checkPair(cCord,f[1])
-		tempSpread(cCord, f[1])
 		if !getVal(cCord+f[1], true )&encoder["opaque"]["mask"]:
 			if f[1].abs() == unPackNorm(norm).abs():
 				createFace(f[0],cCord,bockTextures[f[2]],facing)
@@ -300,6 +312,7 @@ func createBlock(cCord : Vector3i) -> bool:
 
 
 func createFace(face,cCord : Vector3, faceT: Vector2,rot: int = 0, colidable: bool = true, rScale: float = 1):
+	var flocal =  FACES
 	var a = (vertices[face[0]]*(cellSize*rScale)) + (cCord * cellSize) + reset
 	var b = (vertices[face[1]]*(cellSize*rScale)) + (cCord * cellSize) + reset
 	var c = (vertices[face[2]]*(cellSize*rScale)) + (cCord * cellSize) + reset
@@ -351,11 +364,11 @@ func loadVxls() -> void:
 			for y in chunk_size.y: 
 				var b = 0
 				if y == height:
-					b = 3 | encoder["sky"]["mask"] | commonflags
+					b = 3 | encoder["visable"]["mask"] | commonflags
 				if y < height:
-					b = 2 | commonflags
+					b = 2 | encoder["visable"]["mask"] | commonflags
 				if y <height - dd:
-					b = 1 | commonflags
+					b = 1 | encoder["visable"]["mask"] | commonflags
 				vxls[x][z][y] = setMeta(b, "rotation", randi_range(0,encoder["rotation"]["max"]))
 				temp[x][z][y] = 120- ((chunk_size.y*worldPos.y)+y)
 

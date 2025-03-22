@@ -1,4 +1,4 @@
-@tool
+
 extends Node3D
 class_name World
 
@@ -24,7 +24,7 @@ var noise_y_small: FastNoiseLite = FastNoiseLite.new()
 
 var pPos: Vector3i
 
-var loadThread: Thread = Thread.new()
+var WorldTicker: Thread = Thread.new()
 @export var updateQueueLim = 0
 
 func _ready() -> void:
@@ -42,9 +42,36 @@ func _ready() -> void:
 	loadChunks()
 
 
-	#loadThread.start(_threadProcess)
+	WorldTicker.start(_worldTicker)
 	
-func _process(_delta: float) -> void:
+func _worldTicker():
+	var delay = 500
+	while true:
+		var start =  Time.get_ticks_msec()
+		print(OS.get_thread_caller_id())
+		var playerChunk: Vector3i = get_relatives(pPos)["chunk"]
+		print("Player at "+ str(playerChunk)+ "For this tick")
+		var jobIds = []
+		#for chunkInfo in chunks.values():
+			#var chunk: Chunk = chunkInfo["chunk"]
+			#if chunkInfo["placed"] && chunk.worldPos.distance_to(playerChunk) < 2:
+				#var cstart =  Time.get_ticks_msec()
+				##jobIds.append(WorkerThreadPool.add_task(chunk.find_actions)) this iseems to cause issues.
+				#chunk.find_actions() #set up to use thread pool.
+				#print("Finding actions for " + str(chunk.worldPos)+" took "+ str(Time.get_ticks_msec()-cstart)+ " to complete")
+		
+		for id in jobIds:
+			WorkerThreadPool.wait_for_task_completion(id)
+		var end =  Time.get_ticks_msec()
+		var dir = end-start
+		updateChunks()
+		#_threadProcess()
+		print(dir)
+		OS.delay_msec((delay-dir))
+	
+
+func _process(_delta: float) -> void: 
+	#print(OS.get_thread_caller_id())
 	pPos = player.position
 	#print("Player at" + str(get_relatives(pPos)["chunk"]))
 	
@@ -139,14 +166,7 @@ func updateChunks() -> void:
 	var cd = chunks.get(pos)
 	if cd != null:
 		var c:Chunk = cd["chunk"]
-		if c.visible: # if the chunk is ready to be used
-			chunksNode.add_child(c)
-			c.set_name("chunk:"+str(pos))
-			cd["placed"] = true
-			c.startSim()
-		else:
-			c.genMesh()
-			updateQueue.append(pos)
+		c.genMesh()
 			
 func checkChunks() -> void:
 	var playerChunk: Vector3i = get_relatives(pPos)["chunk"]
@@ -160,9 +180,9 @@ func checkChunks() -> void:
 				chunksNode.add_child(chunk["chunk"])
 				chunk["chunk"].set_name("chunk:"+str(pos))
 				chunk["placed"] = true
-			else:
-				chunk["chunk"].genMesh()
-				return
+			#else:
+				#chunk["chunk"].genMesh()
+				#return
 
 func deleteChunks() -> void:
 	var pos = destroyQueue.pop_front()

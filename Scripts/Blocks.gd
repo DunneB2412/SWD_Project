@@ -361,5 +361,53 @@ const blocks = {
 				RIGHT:Vector2(5,0),FRONT:Vector2(5,0),BACK:Vector2(5,0),
 			}
 		]
+	},
+	IRON:{
+		"textures":[
+			{
+				TOP:Vector2(5,0),BOTTOM:Vector2(5,0),LEFT:Vector2(5,0),
+				RIGHT:Vector2(5,0),FRONT:Vector2(5,0),BACK:Vector2(5,0),
+			}
+		]
+	},
+	COPPER:{
+		"textures":[
+			{
+				TOP:Vector2(5,0),BOTTOM:Vector2(5,0),LEFT:Vector2(5,0),
+				RIGHT:Vector2(5,0),FRONT:Vector2(5,0),BACK:Vector2(5,0),
+			}
+		]
+	},
+	TIN:{
+		"textures":[
+			{
+				TOP:Vector2(5,0),BOTTOM:Vector2(5,0),LEFT:Vector2(5,0),
+				RIGHT:Vector2(5,0),FRONT:Vector2(5,0),BACK:Vector2(5,0),
+			}
+		]
+	},
+	BRONZ:{
+		"textures":[
+			{
+				TOP:Vector2(5,0),BOTTOM:Vector2(5,0),LEFT:Vector2(5,0),
+				RIGHT:Vector2(5,0),FRONT:Vector2(5,0),BACK:Vector2(5,0),
+			}
+		]
+	},
+	CARBON:{
+		"textures":[
+			{
+				TOP:Vector2(5,0),BOTTOM:Vector2(5,0),LEFT:Vector2(5,0),
+				RIGHT:Vector2(5,0),FRONT:Vector2(5,0),BACK:Vector2(5,0),
+			}
+		]
+	},
+	STEEL:{
+		"textures":[
+			{
+				TOP:Vector2(5,0),BOTTOM:Vector2(5,0),LEFT:Vector2(5,0),
+				RIGHT:Vector2(5,0),FRONT:Vector2(5,0),BACK:Vector2(5,0),
+			}
+		]
 	}
 }

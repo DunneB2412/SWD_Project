@@ -1,6 +1,10 @@
-[gd_scene load_steps=2 format=3 uid="uid://bsn8u6l6vaav3"]
+[gd_scene load_steps=4 format=3 uid="uid://bsn8u6l6vaav3"]
 
 [ext_resource type="Script" path="res://Scripts/item/Item.gd" id="1_600d5"]
+[ext_resource type="PackedScene" uid="uid://c60mqrloyl2pp" path="res://scenes/inv_item.tscn" id="2_0h8tf"]
+
+[sub_resource type="ViewportTexture" id="ViewportTexture_obnsc"]
+viewport_path = NodePath("BlockItem")
 
 [node name="Item" type="Node2D"]
 script = ExtResource("1_600d5")
@@ -8,3 +12,16 @@ script = ExtResource("1_600d5")
 [node name="MeshInstance2D" type="MeshInstance2D" parent="."]
 position = Vector2(24.125, 15.125)
 scale = Vector2(49.75, -29.75)
+texture = SubResource("ViewportTexture_obnsc")
+
+[node name="BlockItem" parent="." instance=ExtResource("2_0h8tf")]
+
+[node name="Node3D2" type="Node3D" parent="BlockItem"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.00144637, 0.0014841, 0.000993133)
+
+[node name="Camera3D" type="Camera3D" parent="BlockItem/Node3D2"]
+transform = Transform3D(0.573576, -0.409576, 0.709407, 0, 0.866025, 0.5, -0.819152, -0.286788, 0.496732, 1.6, 1.2, 1.2)
+current = true
+
+[node name="OmniLight3D" type="OmniLight3D" parent="BlockItem/Node3D2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, -1)
