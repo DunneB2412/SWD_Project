@@ -52,33 +52,27 @@ func _worldTicker():
 		var playerChunk: Vector3i = get_relatives(pPos)["chunk"]
 		print("Player at "+ str(playerChunk)+ "For this tick")
 		var jobIds = []
-		#for chunkInfo in chunks.values():
-			#var chunk: Chunk = chunkInfo["chunk"]
-			#if chunkInfo["placed"] && chunk.worldPos.distance_to(playerChunk) < 2:
-				#var cstart =  Time.get_ticks_msec()
-				##jobIds.append(WorkerThreadPool.add_task(chunk.find_actions)) this iseems to cause issues.
-				#chunk.find_actions() #set up to use thread pool.
-				#print("Finding actions for " + str(chunk.worldPos)+" took "+ str(Time.get_ticks_msec()-cstart)+ " to complete")
+		for chunkInfo in chunks.values():
+			var chunk: Chunk = chunkInfo["chunk"]
+			if chunkInfo["placed"] && chunk.worldPos.distance_to(playerChunk) < 2:
+				#jobIds.append(WorkerThreadPool.add_task(chunk.find_actions))
+				chunk.find_actions() #set up to use thread pool.
+				
 		
 		for id in jobIds:
 			WorkerThreadPool.wait_for_task_completion(id)
+		
 		var end =  Time.get_ticks_msec()
 		var dir = end-start
-		updateChunks()
-		#_threadProcess()
 		print(dir)
-		OS.delay_msec((delay-dir))
+		OS.delay_msec(max(delay-dir,0.0))
 	
 
 func _process(_delta: float) -> void: 
-	#print(OS.get_thread_caller_id())
 	pPos = player.position
-	#print("Player at" + str(get_relatives(pPos)["chunk"]))
 	
-	#if updateQueue.size()>0:
-		#updateChunks()
-	#if destroyQueue.size()>0:
-		#deleteChunks()
+	if updateQueue.size()>0:
+		updateChunks()
 	checkChunks()
 	
 func _threadProcess():
@@ -183,18 +177,6 @@ func checkChunks() -> void:
 			#else:
 				#chunk["chunk"].genMesh()
 				#return
-
-func deleteChunks() -> void:
-	var pos = destroyQueue.pop_front()
-	if chunks.has(pos):
-		var cVals = chunks[pos]
-		if cVals["life"] <=0:
-			var c = cVals["chunk"]
-			#chunksNode.remove_child(c)
-			chunks.erase(pos)
-			c.queue_free()
-			#safely delete the rest.
-				
 
 func get_block(wCord: Vector3i) -> int:
 	var relative = get_relatives(wCord)

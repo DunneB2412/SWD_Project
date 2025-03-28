@@ -10,6 +10,9 @@ class_name MineralHeatMap
 @export var lhpLiquid: float
 @export var lhpGass: float
 
+@export var pcPaste: float
+@export var pcLiquid: float
+@export var pcGass: float
 
 func getTemp(grams: int, energy: int) -> float :
 	return 0;

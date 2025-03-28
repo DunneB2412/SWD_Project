@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="Mineral" load_steps=2 format=3 uid="uid://bpc7baw42ow8s"]
+
+[ext_resource type="Script" path="res://Scripts/experemental/Mineral/Definations/Mineral.gd" id="1_6nwnn"]
+
+[resource]
+script = ExtResource("1_6nwnn")
+name = ""
+uses_paste_phase = false
+color = Color(0, 0, 0, 1)
+parentid = 0
+varId = 0
+normalDendity = 0.0
+hardness = 0
+clicable = false
+clickAction = Callable()

@@ -1,0 +1,39 @@
+[gd_resource type="Resource" script_class="MeshTemplate" load_steps=9 format=3 uid="uid://27wblm2rulm5"]
+
+[ext_resource type="Script" path="res://Scripts/experemental/MeshBuilder/MeshTemplate.gd" id="1_riu3w"]
+[ext_resource type="Script" path="res://Scripts/experemental/MeshBuilder/Face.gd" id="1_wtmfq"]
+
+[sub_resource type="Resource" id="Resource_jx8jx"]
+script = ExtResource("1_wtmfq")
+vers = PackedFloat32Array(6, 2, 7, 3)
+dir = 0
+
+[sub_resource type="Resource" id="Resource_hhkvt"]
+script = ExtResource("1_wtmfq")
+vers = PackedFloat32Array(1, 0, 5, 4)
+dir = 1
+
+[sub_resource type="Resource" id="Resource_xvfmn"]
+script = ExtResource("1_wtmfq")
+vers = PackedFloat32Array(5, 4, 7, 6)
+dir = 3
+
+[sub_resource type="Resource" id="Resource_wfr3h"]
+script = ExtResource("1_wtmfq")
+vers = PackedFloat32Array(0, 1, 2, 3)
+dir = 2
+
+[sub_resource type="Resource" id="Resource_3eap4"]
+script = ExtResource("1_wtmfq")
+vers = PackedFloat32Array(1, 5, 3, 7)
+dir = 4
+
+[sub_resource type="Resource" id="Resource_8p3cl"]
+script = ExtResource("1_wtmfq")
+vers = PackedFloat32Array(4, 0, 6, 2)
+dir = 5
+
+[resource]
+script = ExtResource("1_riu3w")
+vertices = PackedVector3Array(-0.5, -0.5, -0.5, 0.5, -0.5, -0.5, -0.5, 0.5, -0.5, 0.5, 0.5, -0.5, -0.5, -0.5, 0.5, 0.5, -0.5, 0.5, -0.5, 0.5, 0.5, 0.5, 0.5, 0.5)
+Faces = Array[ExtResource("1_wtmfq")]([SubResource("Resource_jx8jx"), SubResource("Resource_hhkvt"), SubResource("Resource_xvfmn"), SubResource("Resource_wfr3h"), SubResource("Resource_3eap4"), SubResource("Resource_8p3cl")])

@@ -102,86 +102,124 @@ var collision_surface: SurfaceTool = SurfaceTool.new()
 var linesTool: SurfaceTool = SurfaceTool.new()
 
 var updateQueue: Dictionary = {}
+var mutex: Mutex
 @export var updateQueueSize = 16
 
 var updated = false
 
 func _init(pos: Vector3i, genseed: int, world: Node, chunk_size: Vector3i, cell_size: float) -> void:
+	self.visible = false
+	reset = reset*cellSize
+	FACES.make_read_only()
 	self.worldPos = pos
 	position = pos*chunk_size*cell_size
 	self.genSeed = genseed
+	noise.seed = genSeed
 	self.world = world
 	self.chunk_size = chunk_size
 	self.cellSize = cell_size
-	self.visible = false
 	self.reset = Vector3(0.5,0.5,0.5)*cell_size
+	mutex = Mutex.new()
 	loadVxls()
-
-func _ready() -> void:
-	noise.seed = genSeed
-	updateQueue = {}
-	loadVxls()
-	genMesh()
-	reset = reset*cellSize
-	FACES.make_read_only()
 
 func _process(_delta: float) -> void:
+	mutex.lock()
 	for pos in updateQueue:
 		setVal(pos, updateQueue[pos])
 		updateQueue.erase(pos)
 	if updated:
 		genMesh()
-
+	mutex.unlock()
+	
+	# use a lock on queue while processing the changes. use local queue in find action.
 	
 func find_actions():
 	var checkOffsets = [Vector3i(0,0,0),Vector3i(1,0,0),Vector3i(-1,0,0),Vector3i(0,1,0),Vector3i(0,-1,0),Vector3i(0,0,1),Vector3i(0,0,-1)]
-	if updated:
-		return
+	# use search exploration aproach and do pair check when new pos is found.
+	mutex.lock()
+	var pendingUpdates = updateQueue.size()>0
+	mutex.unlock()
+	if updated || pendingUpdates:
+		return # don't process if tghere have been un handled updates
+		
+	var noFacesChecked = 0
+	var effects = {}
+	var cstart =  Time.get_ticks_msec()
+	
+	#var cellsQueue = [Vector3i(0,0,0)]
+	#var visited = []
+	#var test: Vector3i
+	#while cellsQueue.size()>0:
+		#var cell = cellsQueue.pop_front()
+		#visited.append(cell)
+		#mutex.lock()
+		#var val = getVal(cell)
+		#mutex.unlock()
+		#for offset in checkOffsets:
+				#test = cell + offset
+				#if !(cellsQueue.has(test) || visited.has(test)):
+					#if(getOverflow(test)== checkOffsets[0]):
+						#cellsQueue.append(test)
+					#if val&encoder["blocktype"]["mask"] !=0:
+						#noFacesChecked += 1
+						#mutex.lock()
+						#effects.merge(checkPair(cell,offset))
+						#mutex.unlock()
+						#tempSpread(cell,offset)
+					
 	for x in chunk_size.x:
 		for y in chunk_size.y:
 			for z in chunk_size.z:
 				var pos = Vector3i(x,y,z)
 				if getVal(pos)&encoder["blocktype"]["mask"] !=0:
 					for offset in checkOffsets:
-						checkPair(pos,offset)
+						noFacesChecked += 1
+						mutex.lock()
+						effects.merge(checkPair(pos,offset))
+						mutex.unlock()
 						tempSpread(pos,offset)
-				#else:
-					#setVal(pos,0,0)
+	
+	print(str(OS.get_thread_caller_id())+": Finding actions for " + str(worldPos)+ "Checked "+ str(noFacesChecked) + " took " + str( Time.get_ticks_msec() - cstart ) +"ms to process" )
+	mutex.lock()
+	updateQueue = effects
+	mutex.unlock()
+	
 				
-func checkPair(cCord, dir) -> void:
+func checkPair(cCord, dir) -> Dictionary:
+	
 	var ta = getVal(cCord)&encoder["blocktype"]["mask"]
 	if ta == 0:
-		return
+		return {}
 	var bCords = cCord+dir
 	var tb = getVal(bCords,true)&encoder["blocktype"]["mask"]
 	var pa = Blocks.blocks[Blocks.index[ta]]
 	if !pa.has("alchemic"):# is there even an alchemic map defined
-		return
+		return {} 
 	
 	var blkVariant = readMeta(getVal(cCord),"blocktvar")
 	var alchemic = pa["alchemic"] 
 	if alchemic.size()<= blkVariant: # if there is o map defined for the variant
-		return
+		return {}
 	
 	var varAlc = alchemic[blkVariant]
 	if !varAlc.has(dir): # if nothing is defined for the direction
-		return
+		return {}
 	
+	var index = Blocks.index[tb]
 	var alc = varAlc[dir]
 	var pair_actions: Array
-	if alc.has(Blocks.index[tb]): # if there is no map for the other value
-		pair_actions = alc[Blocks.index[tb]]
-		#if (tb == 0 && ta == 2):
-			#print("testing dirt for grass above")
+	if alc.has(index): # if there is no map for the other value
+		pair_actions = alc[index]
 	elif  alc.has("any"): # also checks if we have a catch all.
 		pair_actions = alc["any"]
-		
+		 
 	else:
-		return
+		return {}
 		
 	
 	#needs to handle the following possible conditions.
 	# block type, block var, impact, heat. this is permitting 
+	var effects = {}
 	for i in pair_actions.size():
 		var passesCons = true
 		var logicMode = "or"
@@ -219,12 +257,12 @@ func checkPair(cCord, dir) -> void:
 			#Handle enqueue actions
 			if !updateQueue.has(bCords):# and updateQueue.size()<updateQueueSize:
 				if action.has("other"):
-					updateQueue.merge({bCords:action["other"]})
+					effects.merge({bCords:action["other"]})
 				if action.has("self"):
-					updateQueue.merge({cCord:action["self"]})
+					effects.merge({cCord:action["self"]})
 				if action.has("heat"):
 					temp[cCord.x][cCord.z][cCord.y] += action["heat"]
-			return
+	return effects
 		
 func tempSpread(cCord, dir) -> void:
 	var tempa = getTemp(cCord, true)
@@ -288,7 +326,9 @@ func createBlock(cCord : Vector3i) -> bool:
 	if cell ==0:# if the vxl is empty.
 		return false
 	
-	
+	if(OS.get_thread_caller_id()>1):
+		print("Something spooky is happening.")
+		
 	#TODO handle the norm and rotation on the faces
 	var blockT = readMeta(cell,"blocktype")
 	var blockV = readMeta(cell,"blocktvar")
@@ -296,7 +336,6 @@ func createBlock(cCord : Vector3i) -> bool:
 	var facing = readMeta(cell,"rotation")
 	var bockTextures = Blocks.blocks[Blocks.index[blockT]]["textures"][blockV]
 	var hilighted = focous == cCord
-	
 	var res = false
 	for f in FACES.values():
 		if !getVal(cCord+f[1], true )&encoder["opaque"]["mask"]:

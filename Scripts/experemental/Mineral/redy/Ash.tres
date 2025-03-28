@@ -1,0 +1,53 @@
+[gd_resource type="Resource" script_class="Mineral" load_steps=11 format=3 uid="uid://byhr4aadf6qyj"]
+
+[ext_resource type="Script" path="res://Scripts/experemental/Mineral/Definations/MineralHeatMap.gd" id="1_2qp2x"]
+[ext_resource type="Script" path="res://Scripts/experemental/Mineral/Definations/Mineral.gd" id="1_gabtw"]
+[ext_resource type="Resource" uid="uid://27wblm2rulm5" path="res://Scripts/experemental/Blocks/FullBlock.tres" id="2_0aura"]
+[ext_resource type="Resource" uid="uid://6gcwk4a4iltc" path="res://Scripts/experemental/Mineral/common/Gass.tres" id="4_lp2qv"]
+[ext_resource type="Resource" uid="uid://dv6ole473sjoa" path="res://Scripts/experemental/Mineral/common/Liquid.tres" id="5_nwbxl"]
+[ext_resource type="Script" path="res://Scripts/experemental/Mineral/Definations/MineralTexture.gd" id="6_nmf8p"]
+[ext_resource type="Script" path="res://Scripts/experemental/Mineral/Definations/BlockTextureMap.gd" id="7_m057q"]
+
+[sub_resource type="Resource" id="Resource_tan7i"]
+script = ExtResource("1_2qp2x")
+shpSolid = 3500.0
+shpPaste = 0.0
+shpLiquid = 0.0
+shpGass = 0.0
+lhpPaste = 0.0
+lhpLiquid = 0.0
+lhpGass = 0.0
+pcPaste = 0.0
+pcLiquid = 0.0
+pcGass = 0.0
+
+[sub_resource type="Resource" id="Resource_d865s"]
+script = ExtResource("7_m057q")
+top = Vector2(3, 3)
+bottom = Vector2(3, 3)
+left = Vector2(3, 3)
+right = Vector2(3, 3)
+front = Vector2(3, 3)
+back = Vector2(3, 3)
+aplha = 1.0
+
+[sub_resource type="Resource" id="Resource_3q0ea"]
+script = ExtResource("6_nmf8p")
+solid = SubResource("Resource_d865s")
+liquid = ExtResource("5_nwbxl")
+gass = ExtResource("4_lp2qv")
+
+[resource]
+script = ExtResource("1_gabtw")
+name = ""
+texture = SubResource("Resource_3q0ea")
+uses_paste_phase = false
+color = Color(0.762404, 0.762404, 0.762404, 1)
+parentid = 0
+varId = 0
+heatCapacity = SubResource("Resource_tan7i")
+normalDendity = 100.0
+hardness = 1
+meshTemplate = ExtResource("2_0aura")
+clicable = false
+clickAction = Callable()

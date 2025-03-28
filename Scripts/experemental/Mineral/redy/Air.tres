@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="Mineral" load_steps=6 format=3 uid="uid://du6fqcfw22yqi"]
+
+[ext_resource type="Script" path="res://Scripts/experemental/Mineral/Definations/MineralHeatMap.gd" id="1_4yfyj"]
+[ext_resource type="Resource" uid="uid://27wblm2rulm5" path="res://Scripts/experemental/Blocks/FullBlock.tres" id="2_1lbwi"]
+[ext_resource type="Script" path="res://Scripts/experemental/Mineral/Definations/Mineral.gd" id="3_ljce2"]
+[ext_resource type="Resource" uid="uid://c48ao2e505coa" path="res://Scripts/experemental/Mineral/common/mineral_textures/freezing.tres" id="4_gvt3r"]
+
+[sub_resource type="Resource" id="Resource_m4pe2"]
+script = ExtResource("1_4yfyj")
+shpSolid = 1010.0
+shpPaste = 0.0
+shpLiquid = 1010.0
+shpGass = 1005.0
+lhpPaste = 0.0
+lhpLiquid = 1100.0
+lhpGass = 1200.0
+pcPaste = 0.0
+pcLiquid = 218.0
+pcGass = 183.0
+
+[resource]
+script = ExtResource("3_ljce2")
+name = ""
+texture = ExtResource("4_gvt3r")
+uses_paste_phase = false
+color = Color(0.505882, 0.67451, 0.94902, 1)
+parentid = 0
+varId = 0
+heatCapacity = SubResource("Resource_m4pe2")
+normalDendity = 1.2
+hardness = 2
+meshTemplate = ExtResource("2_1lbwi")
+clicable = false
+clickAction = Callable()

@@ -8,8 +8,10 @@ class_name Player
 @onready var collision_shape_3d: CollisionShape3D = $CollisionShape3D
 
 
-@onready var block_outline: MeshInstance3D = $BlockOutline
 @onready var boddy: Node3D = $Boddy
+
+@onready var rich_text_label: RichTextLabel = $Boddy/Camera3D/RichTextLabel
+
 
 #@onready var grid_map: GridMap = $"../GridMap"
 
@@ -23,11 +25,9 @@ var tiltMin = deg_to_rad(-85)
 var supper = false
 var paused = false
 
-@export var world: World
+@export var world: Node3D
 var focous
-	
-#static func createIn(world: World, pos: Vector3) -> Player:
-	
+var fnorm
 
 func _ready() -> void:
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
@@ -54,6 +54,9 @@ func _physics_process(delta: float) -> void:
 	if Input.is_action_just_pressed("hyperSpeed"):
 		supper = !supper
 		collision_shape_3d.disabled = supper
+		
+	rich_text_label.clear()
+	rich_text_label.add_text(str(position)+"\n"+str(Engine.get_frames_per_second()))
 	
 	#standard
 	grvity(delta)
@@ -64,6 +67,7 @@ func _physics_process(delta: float) -> void:
 	ray_cast()
 	
 
+	
 	move_and_slide()
 
 func ray_cast()-> void:
@@ -76,7 +80,6 @@ func ray_cast()-> void:
 			world_clicks(pos,norm)
 	else:
 		crossair.rotation = 0
-		block_outline.visible = false
 		if focous != null: # we can only get a focous if the world was set, see below.
 			world.unHilightBlock(focous)
 			focous = null
@@ -85,11 +88,14 @@ func world_clicks(pos,norm):
 	var wCord = world.getPosFromRayCol(pos,norm)
 	var blk = world.get_block(wCord)
 	if blk != 0: #make sure we are looking at a block
-		if focous != wCord:
+		if focous != wCord || fnorm != norm:
 			if focous != null:
 				world.unHilightBlock(focous)
 			focous = wCord
-			world.hilight_block(focous)
+			fnorm = norm
+			world.hilight_block(focous, norm)
+		var temp = world.getTemp(wCord)
+		rich_text_label.add_text("\n\nLooking at "+str(focous)+": Type ="+str(blk&0x03ff)+" Var ="+str((blk&0x07c00)>>10)+", Temp ="+str(temp))
 		if Input.is_action_just_pressed("leftMouse"):
 			world.break_block(focous)
 		if Input.is_action_just_pressed("rightMouse"):
