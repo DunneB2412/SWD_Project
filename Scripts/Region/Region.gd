@@ -31,8 +31,11 @@ func _process(delta: float) -> void:
 func prep():
 	for x in worldSize.x:
 		for z in worldSize.z:
-			var pos = Vector2i(x,z)
+			var pos = Vector2i(-(worldSize.x/2)+x,-(worldSize.z/2)+z)
 			col(pos)
+	for s : Section in sections.values():
+		s.genMesh()
+		add_child(s)
 #util
 func getHeight(x,z) -> int:
 	var frequency = Vector2i(1,1)
@@ -71,7 +74,7 @@ func getVal(cord: Vector3i) -> PackedInt64Array:
 	var sec = getSec(relative['sec'])
 	if sec == null:
 		return [0]
-	return sec.getVal(relative["sec"])
+	return sec.getVal(relative["block"])
 func changeAt(cord: Vector3i, val: int, mass: int) -> void:
 	var relative = get_relatives(cord)
 	var sec = getSec(relative['sec'])
@@ -115,16 +118,10 @@ func checkPresence(wPos: Vector3i)->bool:
 
 
 func col(pos:Vector2i) -> void:
-	var ls = {}
 	for x in sectionSize.x:  #load all surface sections. 
 		for z in sectionSize.z:
 			var wCord = Vector3i(x,0,z) + (Vector3i(pos.x,0,pos.y)*sectionSize)
 			var height = getHeight(wCord.x,wCord.z)
 			var sec = Vector3i(pos.x,height/sectionSize.y,pos.y)
 			if !sections.has(sec):
-				ls.merge({sec:Section.new(sec,sectionSize,blockSize, self, blockLib)})
-				
-	for s : Section in ls.values():
-		s.genMesh()
-		add_child(s)
-	sections.merge(ls)
+				sections.merge({sec:Section.new(sec,sectionSize,blockSize, self, blockLib)})

@@ -27,9 +27,6 @@ light_color = Color(1, 0.904461, 0.851482, 1)
 shadow_enabled = true
 
 [node name="Player" parent="." node_paths=PackedStringArray("world") instance=ExtResource("2_206vo")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.161661, 63.5925, 0.200813)
 world = NodePath("..")
-
-[node name="Chunks" type="Node3D" parent="."]
 
 [node name="Region" parent="." instance=ExtResource("2_s0845")]

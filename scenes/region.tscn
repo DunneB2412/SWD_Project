@@ -5,4 +5,5 @@
 
 [node name="Region" type="Node3D"]
 script = ExtResource("1_foowp")
+worldSize = Vector3i(8, 8, 8)
 blockLib = ExtResource("2_8efsp")

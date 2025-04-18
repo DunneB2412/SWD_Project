@@ -37,7 +37,7 @@ var pos: Vector3i
 var root: Node
 
 @export var lib: BlockLib
-var debugMode = true
+var debugMode = false
 var debugContainer: Node3D = Node3D.new()
 
 
@@ -145,20 +145,27 @@ func createBlock(cord : Vector3i, surface: SurfaceTool):
 	if(OS.get_thread_caller_id()>1):
 		print("Something spooky is happening.") # we should considere adding the new mesh to a queue then transfering once ready.
 	
+	#there are a bunch of flags that we do not need to encode in each min, only in cell.
+	#may not use var as mineral model dose nto require it.
+	#record on textuure if it should be notm aligned, world aligned or rotatable
+	var rot
+	var norm = 0
+	
 	for i in min(cell.size(),5):
 		var min = cell[i]
-	#TODO handle the norm and rotation on the faces
 		var blockT = SectionData.readMeta(min,SectionData.INC.BLOCK_TYPE)
-		var blockV = SectionData.readMeta(min,SectionData.INC.BLOCK_VAR)
 		var phase = SectionData.readMeta(min,SectionData.INC.PHASE)
-		var norm = SectionData.readMeta(min,SectionData.INC.NORM)
-		var facing = SectionData.readMeta(min,SectionData.INC.ROTATION)
 		
-		#	§§aWSE4MNBVCXXhandle the other textures
-		var bockTextures = lib.blocks[blockT].mineral.prim_texture.getPhase(phase).getTextures()
-		if i >0:
+		var bockTextures
+		if i ==0:
+			#norm = SectionData.readMeta(min,SectionData.INC.NORM)
+			rot= SectionData.readMeta(min,SectionData.INC.ROTATION)
+			bockTextures = lib.blocks[blockT].mineral.prim_texture.getPhase(phase).getTextures()
+		else:
 			bockTextures = lib.blocks[blockT].mineral.aux_texture.getPhase(phase).getTextures()
+		
 		var color = lib.blocks[blockT].mineral.color
+		color.a = 1.0/(i+1)
 		var template = lib.blocks[blockT].FULL_BLOCK
 		
 		
@@ -166,9 +173,9 @@ func createBlock(cord : Vector3i, surface: SurfaceTool):
 			var offset = Global.OFFSETS[f.dir]
 			if !SectionData.readMeta(getVal(cord+offset)[0],SectionData.INC.OPAQUE):
 				if f.dir == Global.DIR.UP ||  f.dir == Global.DIR.DOWN:
-					createFace(f.vers,template.vertices, template.Reset,surface,cord,bockTextures[(f.dir+norm)%6],color,facing)
+					createFace(f.vers,template.vertices, template.Reset,surface,cord,bockTextures[(f.dir+norm)%6],color,rot)
 				else:
-					createFace(f.vers,template.vertices, template.Reset,surface,cord,bockTextures[(f.dir+norm)%6],color,0)
+					createFace(f.vers,template.vertices, template.Reset,surface,cord,bockTextures[(((f.dir-2)+rot)%4)+2],color,0)
 				if debugMode && i==0:
 					var test = Label3D.new()
 					test.text = data.info(cord)
