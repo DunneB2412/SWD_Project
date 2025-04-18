@@ -59,6 +59,7 @@ var data: Dictionary
 var heatE: Dictionary
 var size: Vector3i
 var name: String
+var lib: BlockLib
 
 ## encoding into a 64 bit int 3x 20 bit numbers. with 4 bits left perhaps use this to flaten. safer aswell.
 #const flag = 0x0fffff
@@ -135,6 +136,10 @@ func setTemp(pos:Vector3i, temp: float) -> void:
 		heatE = temp*avg
 	else:
 		heatE.merge({flat: temp*avg})
+	
+	#for i in cell.size():
+		#var t = readMeta(cell[i],INC.BLOCK_TYPE)
+		
 		
 func getTemp(pos:Vector3i) -> float :
 	var flat = flattenCord(pos)

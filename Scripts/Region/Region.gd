@@ -122,6 +122,12 @@ func col(pos:Vector2i) -> void:
 		for z in sectionSize.z:
 			var wCord = Vector3i(x,0,z) + (Vector3i(pos.x,0,pos.y)*sectionSize)
 			var height = getHeight(wCord.x,wCord.z)
-			var sec = Vector3i(pos.x,height/sectionSize.y,pos.y)
+			var sh = height/sectionSize.y
+			var sec = Vector3i(pos.x,sh,pos.y)
 			if !sections.has(sec):
 				sections.merge({sec:Section.new(sec,sectionSize,blockSize, self, blockLib)})
+			var wh = 60/sectionSize.y
+			for i in (wh - sh)+1:
+				sec = Vector3i(pos.x,sh+i,pos.y)
+				if !sections.has(sec):
+					sections.merge({sec:Section.new(sec,sectionSize,blockSize, self, blockLib)})

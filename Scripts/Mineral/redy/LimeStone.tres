@@ -10,12 +10,12 @@
 
 [sub_resource type="Resource" id="Resource_bcsi0"]
 script = ExtResource("6_cbpfn")
-top = Vector2(0, 0)
-bottom = Vector2(0, 0)
-left = Vector2(0, 0)
-right = Vector2(0, 0)
-front = Vector2(0, 0)
-back = Vector2(0, 0)
+top = Vector2(3, 4)
+bottom = Vector2(3, 4)
+left = Vector2(3, 4)
+right = Vector2(3, 4)
+front = Vector2(3, 4)
+back = Vector2(3, 4)
 aplha = 1.0
 
 [sub_resource type="Resource" id="Resource_y85gy"]

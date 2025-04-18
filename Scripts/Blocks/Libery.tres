@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="BlockLib" load_steps=20 format=3 uid="uid://n3fiyd610cdi"]
+[gd_resource type="Resource" script_class="BlockLib" load_steps=24 format=3 uid="uid://n3fiyd610cdi"]
 
 [ext_resource type="Script" path="res://Scripts/Blocks/Definations/Block.gd" id="1_67hgq"]
 [ext_resource type="Resource" uid="uid://du6fqcfw22yqi" path="res://Scripts/Mineral/redy/Air.tres" id="2_om6fk"]
@@ -11,6 +11,8 @@
 [ext_resource type="Resource" uid="uid://kkis2wf2dtn3" path="res://Scripts/Mineral/redy/Iron.tres" id="7_qbi7j"]
 [ext_resource type="Script" path="res://Scripts/Blocks/Definations/BlockLib.gd" id="7_xm02i"]
 [ext_resource type="Resource" uid="uid://biktou365hdax" path="res://Scripts/Mineral/redy/IronOxyde.tres" id="8_21n1q"]
+[ext_resource type="Resource" uid="uid://ccccv575swarl" path="res://Scripts/Mineral/redy/Water.tres" id="10_1staj"]
+[ext_resource type="Resource" uid="uid://cc0ra48ypmxmy" path="res://Scripts/Mineral/redy/Sand.tres" id="11_xbeok"]
 
 [sub_resource type="GDScript" id="GDScript_tw4va"]
 script/source = "extends Block
@@ -74,8 +76,22 @@ shape = ExtResource("3_kg2ji")
 commonMask = 335544320
 mineral = ExtResource("6_coqvj")
 
+[sub_resource type="Resource" id="Resource_b1yvl"]
+script = ExtResource("1_67hgq")
+name = "Water"
+shape = ExtResource("3_kg2ji")
+commonMask = 335544320
+mineral = ExtResource("10_1staj")
+
+[sub_resource type="Resource" id="Resource_upfr6"]
+script = ExtResource("1_67hgq")
+name = ""
+shape = ExtResource("3_kg2ji")
+commonMask = 335544320
+mineral = ExtResource("11_xbeok")
+
 [resource]
 script = ExtResource("7_xm02i")
-blocks = Array[ExtResource("1_67hgq")]([SubResource("Resource_xmafa"), SubResource("Resource_r0oqr"), SubResource("Resource_juhv7"), SubResource("Resource_csl7l"), SubResource("Resource_xytgx"), SubResource("Resource_4pp40"), SubResource("Resource_8vdwj")])
+blocks = Array[ExtResource("1_67hgq")]([SubResource("Resource_xmafa"), SubResource("Resource_r0oqr"), SubResource("Resource_juhv7"), SubResource("Resource_csl7l"), SubResource("Resource_xytgx"), SubResource("Resource_4pp40"), SubResource("Resource_8vdwj"), SubResource("Resource_b1yvl"), SubResource("Resource_upfr6")])
 material = ExtResource("6_mp6v5")
 size = Vector2(16, 8)

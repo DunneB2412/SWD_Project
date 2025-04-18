@@ -9,12 +9,12 @@
 
 [sub_resource type="Resource" id="Resource_kn4g6"]
 script = ExtResource("7_bbwg6")
-top = Vector2(1, 0)
-bottom = Vector2(1, 0)
-left = Vector2(1, 0)
-right = Vector2(1, 0)
-front = Vector2(1, 0)
-back = Vector2(1, 0)
+top = Vector2(10, 1)
+bottom = Vector2(10, 1)
+left = Vector2(10, 1)
+right = Vector2(10, 1)
+front = Vector2(10, 1)
+back = Vector2(10, 1)
 aplha = 1.0
 
 [sub_resource type="Resource" id="Resource_4j1tm"]

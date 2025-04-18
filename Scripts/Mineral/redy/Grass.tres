@@ -9,12 +9,12 @@
 
 [sub_resource type="Resource" id="Resource_yvn8o"]
 script = ExtResource("7_bfhpq")
-top = Vector2(1, 2)
-bottom = Vector2(0, 7)
-left = Vector2(1, 1)
-right = Vector2(1, 1)
-front = Vector2(0, 1)
-back = Vector2(0, 2)
+top = Vector2(7, 0)
+bottom = Vector2(0, 0)
+left = Vector2(8, 0)
+right = Vector2(9, 0)
+front = Vector2(10, 0)
+back = Vector2(11, 0)
 aplha = 1.0
 
 [sub_resource type="Resource" id="Resource_ajkhw"]
@@ -25,12 +25,12 @@ gass = ExtResource("4_3cb4i")
 
 [sub_resource type="Resource" id="Resource_g65g0"]
 script = ExtResource("7_bfhpq")
-top = Vector2(1, 2)
-bottom = Vector2(1, 2)
-left = Vector2(1, 2)
-right = Vector2(1, 2)
-front = Vector2(1, 2)
-back = Vector2(1, 2)
+top = Vector2(7, 0)
+bottom = Vector2(7, 0)
+left = Vector2(7, 0)
+right = Vector2(7, 0)
+front = Vector2(7, 0)
+back = Vector2(7, 0)
 aplha = 1.0
 
 [sub_resource type="Resource" id="Resource_qdfqu"]

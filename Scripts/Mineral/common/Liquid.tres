@@ -4,10 +4,10 @@
 
 [resource]
 script = ExtResource("1_ag8uo")
-top = Vector2(4, 7)
-bottom = Vector2(4, 7)
-left = Vector2(4, 7)
-right = Vector2(4, 7)
-front = Vector2(4, 7)
-back = Vector2(4, 7)
+top = Vector2(4, 6)
+bottom = Vector2(4, 6)
+left = Vector2(4, 6)
+right = Vector2(4, 6)
+front = Vector2(4, 6)
+back = Vector2(4, 6)
 aplha = 0.822

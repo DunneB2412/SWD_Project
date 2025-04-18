@@ -17,12 +17,12 @@ aplha = 1.0
 
 [sub_resource type="Resource" id="Resource_heq4t"]
 script = ExtResource("2_kertt")
-top = Vector2(10, 6)
-bottom = Vector2(10, 6)
-left = Vector2(10, 6)
-right = Vector2(10, 6)
-front = Vector2(10, 6)
-back = Vector2(10, 6)
+top = Vector2(11, 5)
+bottom = Vector2(11, 5)
+left = Vector2(11, 5)
+right = Vector2(11, 5)
+front = Vector2(11, 5)
+back = Vector2(11, 5)
 aplha = 1.0
 
 [resource]

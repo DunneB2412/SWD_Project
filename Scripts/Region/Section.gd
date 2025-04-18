@@ -66,24 +66,31 @@ func loadSection() -> void:
 			var height = size.y
 			if root != null:
 				height = root.getHeight(wCord.x,wCord.z) - (size.y*pos.y)
+			var waterHeight = 60 - (size.y*pos.y) #parent root should own water height.
+			var soil = 2
+			if height - 3 < waterHeight:
+				soil = 8
 			
-			var dd = 5
+			var dd = 3
 			for y in size.y: 
 				var b = 0
-				#if y == height:
-					#b = 3 
+				if y <= waterHeight && y > height:
+					b = 7
 				if y <= height:
-					b = 2 
+					b = soil 
 				if y <height - dd:
 					b = 1
 				if b>0:
-					b = b | lib.blocks[b].commonMask
-					b = SectionData.setMeta(b, SectionData.INC.ROTATION, randi_range(0,SectionData.metaLim(SectionData.INC.ROTATION)))
+					var v = b | lib.blocks[b].commonMask
+					if b == 7:
+						v = SectionData.setMeta(v,SectionData.INC.PHASE, 1)
+						v = SectionData.setMeta(v,SectionData.INC.OPAQUE, 0)
+					v = SectionData.setMeta(v, SectionData.INC.ROTATION, randi_range(0,SectionData.metaLim(SectionData.INC.ROTATION)))
 					#b = SectionData.setMeta(b, SectionData.INC.NORM, randi_range(0,SectionData.metaLim(SectionData.INC.NORM)))
-					initWith(Vector3i(x,y,z),b)
-					if y == height:
+					initWith(Vector3i(x,y,z),v)
+					if y == height && b == 2:
 						addAt(Vector3i(x,y,z),3,5)
-					if randi_range(0,10)>=8:
+					if y <= height && randi_range(0,10)>=8:
 						addAt(Vector3i(x,y,z),5,1000)
 					setTemp(Vector3i(x,y,z),120- ((size.y*pos.y)+y))
 
@@ -171,14 +178,17 @@ func createBlock(cord : Vector3i, surface: SurfaceTool):
 		
 		for f: Face in template.Faces:
 			var offset = Global.OFFSETS[f.dir]
-			if !SectionData.readMeta(getVal(cord+offset)[0],SectionData.INC.OPAQUE):
+			var n = getVal(cord+offset)[0]
+			var t = SectionData.readMeta(n,SectionData.INC.BLOCK_TYPE)
+			var opaque = SectionData.readMeta(n,SectionData.INC.OPAQUE)
+			if !opaque && (t != blockT):
 				if f.dir == Global.DIR.UP ||  f.dir == Global.DIR.DOWN:
 					createFace(f.vers,template.vertices, template.Reset,surface,cord,bockTextures[(f.dir+norm)%6],color,rot)
 				else:
 					createFace(f.vers,template.vertices, template.Reset,surface,cord,bockTextures[(((f.dir-2)+rot)%4)+2],color,0)
 				if debugMode && i==0:
 					var test = Label3D.new()
-					test.text = data.info(cord)
+					test.text = str(cord+(pos*size))+"\n"+data.info(cord)
 					test.position = (cord * cellSize) + (Vector3(cellSize,cellSize,cellSize)/2) + (Global.OFFSETS[f.dir]*0.51)
 					test.font_size = 12
 					
@@ -219,7 +229,10 @@ func getVal(cord: Vector3i) -> PackedInt64Array:
 func addAt(cord: Vector3i, val: int, mass: int) -> void:
 	var overflow = getOverflow(cord)
 	if overflow == Global.REF_VEC3:
-		data.addAt(cord,val,mass)
+		if mass >=0:
+			data.addAt(cord,val,mass)
+		else:
+			data.consume(cord,val,mass)
 		#if(root != null && root.has_method("updateChunk")):
 			#for d in Global.OFFSETS.values():
 				#if(checkBounds(cord+d)):

@@ -34,7 +34,6 @@ func _ready() -> void:
 	st.add_triangle_fan(([Vector3(100,100,0),Vector3(0,100,0),Vector3(0,0,0)]),([c,b,a]))
 	
 	
-	
 	st.generate_normals(false)
 	st.commit(mesh)
 	meshinstance.set_mesh(mesh)
