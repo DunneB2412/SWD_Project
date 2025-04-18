@@ -1,0 +1,35 @@
+[gd_resource type="Resource" script_class="Mineral" load_steps=5 format=3 uid="uid://bvbtraemmuyg8"]
+
+[ext_resource type="Script" path="res://Scripts/Mineral/Definations/MineralHeatMap.gd" id="1_2gdwr"]
+[ext_resource type="Script" path="res://Scripts/Mineral/Definations/Mineral.gd" id="3_yaepu"]
+[ext_resource type="Resource" uid="uid://c48ao2e505coa" path="res://Scripts/Mineral/common/mineral_textures/freezing.tres" id="4_3anjf"]
+
+[sub_resource type="Resource" id="Resource_bepoj"]
+script = ExtResource("1_2gdwr")
+shpSolid = 839.0
+shpPaste = 839.0
+shpLiquid = 839.0
+shpGass = 839.0
+lhpPaste = 0.0
+lhpLiquid = 571.0
+lhpGass = 571.0
+pcPaste = 0.0
+pcLiquid = -75.0
+pcGass = -78.0
+condsolid = 0.25
+condPaste = 0.25
+condLiquid = 0.25
+condGass = 0.25
+
+[resource]
+script = ExtResource("3_yaepu")
+name = ""
+prim_texture = ExtResource("4_3anjf")
+aux_texture = ExtResource("4_3anjf")
+uses_paste_phase = false
+color = Color(0, 0, 0, 1)
+heatCapacity = SubResource("Resource_bepoj")
+normalDendity = 1550.0
+hardness = 4
+clicable = false
+clickAction = Callable()

@@ -1,0 +1,69 @@
+[gd_resource type="Resource" script_class="Mineral" load_steps=11 format=3 uid="uid://byhr4aadf6qyj"]
+
+[ext_resource type="Script" path="res://Scripts/Mineral/Definations/MineralHeatMap.gd" id="1_mmsq4"]
+[ext_resource type="Script" path="res://Scripts/Mineral/Definations/Mineral.gd" id="3_dpf7x"]
+[ext_resource type="Resource" uid="uid://6gcwk4a4iltc" path="res://Scripts/Mineral/common/Gass.tres" id="4_rd5ut"]
+[ext_resource type="Script" path="res://Scripts/Mineral/Definations/MineralTexture.gd" id="6_ya77r"]
+[ext_resource type="Script" path="res://Scripts/Mineral/Definations/BlockTextureMap.gd" id="7_hadof"]
+
+[sub_resource type="Resource" id="Resource_t5e4n"]
+script = ExtResource("7_hadof")
+top = Vector2(3, 3)
+bottom = Vector2(3, 3)
+left = Vector2(3, 3)
+right = Vector2(3, 3)
+front = Vector2(3, 3)
+back = Vector2(3, 3)
+aplha = 1.0
+
+[sub_resource type="Resource" id="Resource_sdoov"]
+script = ExtResource("7_hadof")
+top = Vector2(3, 3)
+bottom = Vector2(3, 3)
+left = Vector2(3, 3)
+right = Vector2(3, 3)
+front = Vector2(3, 3)
+back = Vector2(3, 3)
+aplha = 1.0
+
+[sub_resource type="Resource" id="Resource_5pfdq"]
+script = ExtResource("6_ya77r")
+solid = SubResource("Resource_sdoov")
+liquid = SubResource("Resource_t5e4n")
+gass = ExtResource("4_rd5ut")
+
+[sub_resource type="Resource" id="Resource_tan7i"]
+script = ExtResource("1_mmsq4")
+shpSolid = 3500.0
+shpPaste = 0.0
+shpLiquid = 3500.0
+shpGass = 3500.0
+lhpPaste = 0.0
+lhpLiquid = 1000.0
+lhpGass = 1000.0
+pcPaste = 0.0
+pcLiquid = 3200.0
+pcGass = 2500.0
+condsolid = 0.05
+condPaste = 0.05
+condLiquid = 0.05
+condGass = 0.05
+
+[sub_resource type="Resource" id="Resource_p66ia"]
+script = ExtResource("6_ya77r")
+solid = SubResource("Resource_sdoov")
+liquid = SubResource("Resource_t5e4n")
+gass = ExtResource("4_rd5ut")
+
+[resource]
+script = ExtResource("3_dpf7x")
+name = ""
+prim_texture = SubResource("Resource_p66ia")
+aux_texture = SubResource("Resource_5pfdq")
+uses_paste_phase = false
+color = Color(0.762404, 0.762404, 0.762404, 1)
+heatCapacity = SubResource("Resource_tan7i")
+normalDendity = 100.0
+hardness = 1
+clicable = false
+clickAction = Callable()

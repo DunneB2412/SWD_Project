@@ -1,0 +1,81 @@
+[gd_resource type="Resource" script_class="BlockLib" load_steps=20 format=3 uid="uid://n3fiyd610cdi"]
+
+[ext_resource type="Script" path="res://Scripts/Blocks/Definations/Block.gd" id="1_67hgq"]
+[ext_resource type="Resource" uid="uid://du6fqcfw22yqi" path="res://Scripts/Mineral/redy/Air.tres" id="2_om6fk"]
+[ext_resource type="Resource" uid="uid://c4ycbtpg5b0ef" path="res://Scripts/Blocks/fullBlockMechTemplate.tres" id="3_kg2ji"]
+[ext_resource type="Resource" uid="uid://l0aavxsexsbn" path="res://Scripts/Mineral/redy/LimeStone.tres" id="4_5bbeg"]
+[ext_resource type="Resource" uid="uid://d1ch1pbbg0r08" path="res://Scripts/Mineral/redy/Dirt.tres" id="5_vol12"]
+[ext_resource type="Resource" uid="uid://dprdisqmwkyoj" path="res://Scripts/Mineral/redy/Bricks.tres" id="6_coqvj"]
+[ext_resource type="Material" uid="uid://cxskv0jkjkulh" path="res://materials/test/fullMap.tres" id="6_mp6v5"]
+[ext_resource type="Resource" uid="uid://djqsjneorge8d" path="res://Scripts/Mineral/redy/Grass.tres" id="6_wkad1"]
+[ext_resource type="Resource" uid="uid://kkis2wf2dtn3" path="res://Scripts/Mineral/redy/Iron.tres" id="7_qbi7j"]
+[ext_resource type="Script" path="res://Scripts/Blocks/Definations/BlockLib.gd" id="7_xm02i"]
+[ext_resource type="Resource" uid="uid://biktou365hdax" path="res://Scripts/Mineral/redy/IronOxyde.tres" id="8_21n1q"]
+
+[sub_resource type="GDScript" id="GDScript_tw4va"]
+script/source = "extends Block
+class_name FullBlock
+
+#func _init(mineralIn: Mineral) -> void:
+	#super(mineralIn)
+	#
+
+func _ready() -> void:
+	self.commonMask = 0x14000000
+	self.shape = load(\"res://Scripts/experemental/Blocks/FullBlock.tres\")
+"
+
+[sub_resource type="Resource" id="Resource_xmafa"]
+script = SubResource("GDScript_tw4va")
+name = "Air"
+shape = ExtResource("3_kg2ji")
+commonMask = 0
+mineral = ExtResource("2_om6fk")
+
+[sub_resource type="Resource" id="Resource_r0oqr"]
+script = SubResource("GDScript_tw4va")
+name = "Stone"
+shape = ExtResource("3_kg2ji")
+commonMask = 335544320
+mineral = ExtResource("4_5bbeg")
+
+[sub_resource type="Resource" id="Resource_juhv7"]
+script = SubResource("GDScript_tw4va")
+name = "dirt"
+shape = ExtResource("3_kg2ji")
+commonMask = 335544320
+mineral = ExtResource("5_vol12")
+
+[sub_resource type="Resource" id="Resource_csl7l"]
+script = SubResource("GDScript_tw4va")
+name = ""
+shape = ExtResource("3_kg2ji")
+commonMask = 335544320
+mineral = ExtResource("6_wkad1")
+
+[sub_resource type="Resource" id="Resource_xytgx"]
+script = ExtResource("1_67hgq")
+name = ""
+shape = ExtResource("3_kg2ji")
+commonMask = 335544320
+mineral = ExtResource("7_qbi7j")
+
+[sub_resource type="Resource" id="Resource_4pp40"]
+script = ExtResource("1_67hgq")
+name = ""
+shape = ExtResource("3_kg2ji")
+commonMask = 335544320
+mineral = ExtResource("8_21n1q")
+
+[sub_resource type="Resource" id="Resource_8vdwj"]
+script = ExtResource("1_67hgq")
+name = ""
+shape = ExtResource("3_kg2ji")
+commonMask = 335544320
+mineral = ExtResource("6_coqvj")
+
+[resource]
+script = ExtResource("7_xm02i")
+blocks = Array[ExtResource("1_67hgq")]([SubResource("Resource_xmafa"), SubResource("Resource_r0oqr"), SubResource("Resource_juhv7"), SubResource("Resource_csl7l"), SubResource("Resource_xytgx"), SubResource("Resource_4pp40"), SubResource("Resource_8vdwj")])
+material = ExtResource("6_mp6v5")
+size = Vector2(16, 8)

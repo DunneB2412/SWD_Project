@@ -1,0 +1,36 @@
+[gd_resource type="Resource" script_class="Mineral" load_steps=6 format=3 uid="uid://biktou365hdax"]
+
+[ext_resource type="Resource" uid="uid://bx6ycftlht65n" path="res://Scripts/Mineral/common/mineral_textures/metalOre.tres" id="1_rc5m0"]
+[ext_resource type="Script" path="res://Scripts/Mineral/Definations/MineralHeatMap.gd" id="2_w2lah"]
+[ext_resource type="Resource" uid="uid://bugynda8tfris" path="res://Scripts/Mineral/common/mineral_textures/Metal.tres" id="3_hfhrh"]
+[ext_resource type="Script" path="res://Scripts/Mineral/Definations/Mineral.gd" id="4_5eqgo"]
+
+[sub_resource type="Resource" id="Resource_o27hr"]
+script = ExtResource("2_w2lah")
+shpSolid = 449.0
+shpPaste = 549.0
+shpLiquid = 649.0
+shpGass = 749.0
+lhpPaste = 381.0
+lhpLiquid = 1381.0
+lhpGass = 340.0
+pcPaste = 1538.0
+pcLiquid = 1638.0
+pcGass = 2861.0
+condsolid = 0.25
+condPaste = 0.25
+condLiquid = 0.25
+condGass = 0.25
+
+[resource]
+script = ExtResource("4_5eqgo")
+name = "Iron"
+prim_texture = ExtResource("3_hfhrh")
+aux_texture = ExtResource("1_rc5m0")
+uses_paste_phase = true
+color = Color(0.88322, 0.393268, 0.232771, 1)
+heatCapacity = SubResource("Resource_o27hr")
+normalDendity = 7874.0
+hardness = 8
+clicable = false
+clickAction = Callable()

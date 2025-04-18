@@ -1,0 +1,53 @@
+[gd_resource type="Resource" script_class="Mineral" load_steps=11 format=3 uid="uid://djqsjneorge8d"]
+
+[ext_resource type="Resource" uid="uid://2oqb586wk22i" path="res://Scripts/Mineral/common/HeatMaps/dirt.tres" id="1_cdo0w"]
+[ext_resource type="Script" path="res://Scripts/Mineral/Definations/Mineral.gd" id="3_wqsdu"]
+[ext_resource type="Resource" uid="uid://6gcwk4a4iltc" path="res://Scripts/Mineral/common/Gass.tres" id="4_3cb4i"]
+[ext_resource type="Resource" uid="uid://dv6ole473sjoa" path="res://Scripts/Mineral/common/Liquid.tres" id="5_ek36l"]
+[ext_resource type="Script" path="res://Scripts/Mineral/Definations/MineralTexture.gd" id="6_soa6d"]
+[ext_resource type="Script" path="res://Scripts/Mineral/Definations/BlockTextureMap.gd" id="7_bfhpq"]
+
+[sub_resource type="Resource" id="Resource_yvn8o"]
+script = ExtResource("7_bfhpq")
+top = Vector2(1, 2)
+bottom = Vector2(0, 7)
+left = Vector2(1, 1)
+right = Vector2(1, 1)
+front = Vector2(0, 1)
+back = Vector2(0, 2)
+aplha = 1.0
+
+[sub_resource type="Resource" id="Resource_ajkhw"]
+script = ExtResource("6_soa6d")
+solid = SubResource("Resource_yvn8o")
+liquid = ExtResource("5_ek36l")
+gass = ExtResource("4_3cb4i")
+
+[sub_resource type="Resource" id="Resource_g65g0"]
+script = ExtResource("7_bfhpq")
+top = Vector2(1, 2)
+bottom = Vector2(1, 2)
+left = Vector2(1, 2)
+right = Vector2(1, 2)
+front = Vector2(1, 2)
+back = Vector2(1, 2)
+aplha = 1.0
+
+[sub_resource type="Resource" id="Resource_qdfqu"]
+script = ExtResource("6_soa6d")
+solid = SubResource("Resource_g65g0")
+liquid = ExtResource("5_ek36l")
+gass = ExtResource("4_3cb4i")
+
+[resource]
+script = ExtResource("3_wqsdu")
+name = ""
+prim_texture = SubResource("Resource_qdfqu")
+aux_texture = SubResource("Resource_ajkhw")
+uses_paste_phase = false
+color = Color(0.27451, 0.588235, 0.223529, 1)
+heatCapacity = ExtResource("1_cdo0w")
+normalDendity = 1255.0
+hardness = 3
+clicable = false
+clickAction = Callable()

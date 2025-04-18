@@ -1,12 +1,6 @@
-[gd_scene load_steps=8 format=3 uid="uid://c05ub2i700151"]
+extends CharacterBody3D
 
-[ext_resource type="Texture2D" uid="uid://bqp1bvxh20nm5" path="res://assets/crosshair161.png" id="2_xmgmu"]
-[ext_resource type="Script" path="res://Scripts/gui/crossair.gd" id="3_yniyc"]
-
-[sub_resource type="GDScript" id="GDScript_r2jjo"]
-script/source = "extends CharacterBody3D
-
-class_name MyPlayer
+class_name lPlayer
 
 @onready var camera_3d: Camera3D = $Boddy/Camera3D
 @onready var ray_cast_3d: RayCast3D = $Boddy/Camera3D/RayCast3D
@@ -19,7 +13,7 @@ class_name MyPlayer
 @onready var rich_text_label: RichTextLabel = $Boddy/Camera3D/RichTextLabel
 
 
-#@onready var grid_map: GridMap = $\"../GridMap\"
+#@onready var grid_map: GridMap = $"../GridMap"
 
 const SPEED = 5.0
 const JUMP_VELOCITY = 4.6
@@ -47,7 +41,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _physics_process(delta: float) -> void:
 	
-	if Input.is_action_just_pressed(\"pause\"):
+	if Input.is_action_just_pressed("pause"):
 		paused = !paused
 		if paused:
 			Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
@@ -57,12 +51,12 @@ func _physics_process(delta: float) -> void:
 	if paused:
 		return
 		
-	if Input.is_action_just_pressed(\"hyperSpeed\"):
+	if Input.is_action_just_pressed("hyperSpeed"):
 		supper = !supper
 		collision_shape_3d.disabled = supper
 		
 	rich_text_label.clear()
-	rich_text_label.add_text(str(position)+\"\\n\"+str(Engine.get_frames_per_second()))
+	rich_text_label.add_text(str(position)+"\n"+str(Engine.get_frames_per_second()))
 	
 	#standard
 	grvity(delta)
@@ -101,10 +95,10 @@ func world_clicks(pos,norm):
 			fnorm = norm
 			world.hilight_block(focous, norm)
 		var temp = world.getTemp(wCord)
-		rich_text_label.add_text(\"\\n\\nLooking at \"+str(focous)+\": Type =\"+str(blk&0x03ff)+\" Var =\"+str((blk&0x07c00)>>10)+\", Temp =\"+str(temp))
-		if Input.is_action_just_pressed(\"leftMouse\"):
+		rich_text_label.add_text("\n\nLooking at "+str(focous)+": Type ="+str(blk&0x03ff)+" Var ="+str((blk&0x07c00)>>10)+", Temp ="+str(temp))
+		if Input.is_action_just_pressed("leftMouse"):
 			world.break_block(focous)
-		if Input.is_action_just_pressed(\"rightMouse\"):
+		if Input.is_action_just_pressed("rightMouse"):
 			world.place_block(focous+Vector3i(norm),3)
 	
 
@@ -120,25 +114,25 @@ func grvity(delta: float) -> void:
 func jump() -> void:
 	# Handle jump.
 	if supper:
-		if Input.is_action_pressed(\"jump\"):
+		if Input.is_action_pressed("jump"):
 			velocity.y = JUMP_VELOCITY*3
-		elif Input.is_action_pressed(\"crouch\"):
+		elif Input.is_action_pressed("crouch"):
 			velocity.y = JUMP_VELOCITY*-3
 		else:
 			velocity.y = 0
 	else:
-		if Input.is_action_just_pressed(\"jump\") and is_on_floor():
+		if Input.is_action_just_pressed("jump") and is_on_floor():
 			velocity.y = JUMP_VELOCITY
 
 func walk() -> void:
 	var speed = SPEED
-	if Input.is_action_pressed(\"sprint\"):
+	if Input.is_action_pressed("sprint"):
 		speed*=2
 	if supper:
 		speed*=10
 	# Get the input direction and handle the movement/deceleration.
 	# As good practice, you should replace UI actions with custom gameplay actions.
-	var input_dir := Input.get_vector(\"left\", \"right\", \"up\", \"down\")
+	var input_dir := Input.get_vector("left", "right", "up", "down")
 	var direction := (boddy.transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
 	if direction:
 		velocity.x = direction.x * speed
@@ -146,62 +140,3 @@ func walk() -> void:
 	else:
 		velocity.x = move_toward(velocity.x, 0, speed)
 		velocity.z = move_toward(velocity.z, 0, speed)
-"
-
-[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_adrw6"]
-margin = 0.0
-radius = 0.4
-height = 1.9
-
-[sub_resource type="CapsuleMesh" id="CapsuleMesh_3alwu"]
-
-[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_0swoi"]
-blend_mode = 2
-
-[sub_resource type="Theme" id="Theme_p4qux"]
-default_font_size = 20
-
-[node name="Player" type="CharacterBody3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.02701, 0)
-script = SubResource("GDScript_r2jjo")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-shape = SubResource("CapsuleShape3D_adrw6")
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
-mesh = SubResource("CapsuleMesh_3alwu")
-
-[node name="Boddy" type="Node3D" parent="."]
-
-[node name="Camera3D" type="Camera3D" parent="Boddy"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.779485, 0)
-
-[node name="RayCast3D" type="RayCast3D" parent="Boddy/Camera3D"]
-target_position = Vector3(0, 0, -5)
-
-[node name="crossair" type="TextureRect" parent="Boddy/Camera3D"]
-custom_minimum_size = Vector2(64, 64)
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -32.0
-offset_top = -32.0
-offset_right = 32.0
-offset_bottom = 32.0
-grow_horizontal = 2
-grow_vertical = 2
-pivot_offset = Vector2(32, 32)
-texture = ExtResource("2_xmgmu")
-script = ExtResource("3_yniyc")
-metadata/_edit_use_anchors_ = true
-
-[node name="RichTextLabel" type="RichTextLabel" parent="Boddy/Camera3D"]
-material = SubResource("CanvasItemMaterial_0swoi")
-offset_right = 521.0
-offset_bottom = 652.0
-theme = SubResource("Theme_p4qux")
-text = "test"
-fit_content = true
-scroll_active = false

@@ -1,0 +1,60 @@
+[gd_resource type="Resource" script_class="Mineral" load_steps=11 format=3 uid="uid://vvnsm4hswt6k"]
+
+[ext_resource type="Script" path="res://Scripts/Mineral/Definations/MineralHeatMap.gd" id="1_xr6ui"]
+[ext_resource type="Script" path="res://Scripts/Mineral/Definations/Mineral.gd" id="3_fdw6i"]
+[ext_resource type="Resource" uid="uid://6gcwk4a4iltc" path="res://Scripts/Mineral/common/Gass.tres" id="4_4803j"]
+[ext_resource type="Resource" uid="uid://dv6ole473sjoa" path="res://Scripts/Mineral/common/Liquid.tres" id="5_xn2v8"]
+[ext_resource type="Script" path="res://Scripts/Mineral/Definations/MineralTexture.gd" id="6_ofirm"]
+[ext_resource type="Script" path="res://Scripts/Mineral/Definations/BlockTextureMap.gd" id="7_m0xqu"]
+
+[sub_resource type="Resource" id="Resource_eypye"]
+script = ExtResource("7_m0xqu")
+top = Vector2(3, 1)
+bottom = Vector2(3, 1)
+left = Vector2(3, 1)
+right = Vector2(3, 1)
+front = Vector2(3, 1)
+back = Vector2(3, 1)
+aplha = 1.0
+
+[sub_resource type="Resource" id="Resource_dcyug"]
+script = ExtResource("6_ofirm")
+solid = SubResource("Resource_eypye")
+liquid = ExtResource("5_xn2v8")
+gass = ExtResource("4_4803j")
+
+[sub_resource type="Resource" id="Resource_b1y1l"]
+script = ExtResource("1_xr6ui")
+shpSolid = 100.0
+shpPaste = 0.0
+shpLiquid = 100.0
+shpGass = 100.0
+lhpPaste = 0.0
+lhpLiquid = 100.0
+lhpGass = 100.0
+pcPaste = 0.0
+pcLiquid = 10000.0
+pcGass = 10000.0
+condsolid = 0.25
+condPaste = 0.25
+condLiquid = 0.25
+condGass = 0.25
+
+[sub_resource type="Resource" id="Resource_ilmo1"]
+script = ExtResource("6_ofirm")
+solid = SubResource("Resource_eypye")
+liquid = ExtResource("5_xn2v8")
+gass = ExtResource("4_4803j")
+
+[resource]
+script = ExtResource("3_fdw6i")
+name = ""
+prim_texture = SubResource("Resource_ilmo1")
+aux_texture = SubResource("Resource_dcyug")
+uses_paste_phase = false
+color = Color(0.383879, 0.59547, 0.187955, 1)
+heatCapacity = SubResource("Resource_b1y1l")
+normalDendity = 10.0
+hardness = 1
+clicable = false
+clickAction = Callable()

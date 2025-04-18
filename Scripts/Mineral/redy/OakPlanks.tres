@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="Mineral" load_steps=9 format=3 uid="uid://bq44xng5lvu0v"]
+
+[ext_resource type="Resource" uid="uid://6gcwk4a4iltc" path="res://Scripts/Mineral/common/Gass.tres" id="1_a348y"]
+[ext_resource type="Resource" uid="uid://dv6ole473sjoa" path="res://Scripts/Mineral/common/Liquid.tres" id="2_dk1f7"]
+[ext_resource type="Script" path="res://Scripts/Mineral/Definations/MineralTexture.gd" id="3_ieh6h"]
+[ext_resource type="Script" path="res://Scripts/Mineral/Definations/BlockTextureMap.gd" id="4_1tqxp"]
+[ext_resource type="Script" path="res://Scripts/Mineral/Definations/Mineral.gd" id="5_erwvt"]
+
+[sub_resource type="Resource" id="Resource_bupoj"]
+script = ExtResource("4_1tqxp")
+top = Vector2(4, 0)
+bottom = Vector2(4, 0)
+left = Vector2(4, 0)
+right = Vector2(4, 0)
+front = Vector2(4, 0)
+back = Vector2(4, 0)
+aplha = 1.0
+
+[sub_resource type="Resource" id="Resource_p88pg"]
+script = ExtResource("3_ieh6h")
+solid = SubResource("Resource_bupoj")
+liquid = ExtResource("2_dk1f7")
+gass = ExtResource("1_a348y")
+
+[sub_resource type="Resource" id="Resource_nvdn5"]
+script = ExtResource("3_ieh6h")
+solid = SubResource("Resource_bupoj")
+liquid = ExtResource("2_dk1f7")
+gass = ExtResource("1_a348y")
+
+[resource]
+script = ExtResource("5_erwvt")
+name = "OakPlanks"
+prim_texture = SubResource("Resource_nvdn5")
+aux_texture = SubResource("Resource_p88pg")
+uses_paste_phase = false
+color = Color(0.513726, 0.32549, 0.14902, 1)
+normalDendity = 0.0
+hardness = 5
+clicable = false
+clickAction = Callable()

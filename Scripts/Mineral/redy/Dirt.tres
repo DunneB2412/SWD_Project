@@ -1,0 +1,43 @@
+[gd_resource type="Resource" script_class="Mineral" load_steps=10 format=3 uid="uid://d1ch1pbbg0r08"]
+
+[ext_resource type="Resource" uid="uid://2oqb586wk22i" path="res://Scripts/Mineral/common/HeatMaps/dirt.tres" id="1_huuxg"]
+[ext_resource type="Resource" uid="uid://dxfsx02ei0ixi" path="res://Scripts/Mineral/common/Lava.tres" id="2_oji3k"]
+[ext_resource type="Script" path="res://Scripts/Mineral/Definations/Mineral.gd" id="3_h4221"]
+[ext_resource type="Resource" uid="uid://6gcwk4a4iltc" path="res://Scripts/Mineral/common/Gass.tres" id="4_wfx46"]
+[ext_resource type="Script" path="res://Scripts/Mineral/Definations/MineralTexture.gd" id="6_oyqpq"]
+[ext_resource type="Script" path="res://Scripts/Mineral/Definations/BlockTextureMap.gd" id="7_bbwg6"]
+
+[sub_resource type="Resource" id="Resource_kn4g6"]
+script = ExtResource("7_bbwg6")
+top = Vector2(1, 0)
+bottom = Vector2(1, 0)
+left = Vector2(1, 0)
+right = Vector2(1, 0)
+front = Vector2(1, 0)
+back = Vector2(1, 0)
+aplha = 1.0
+
+[sub_resource type="Resource" id="Resource_4j1tm"]
+script = ExtResource("6_oyqpq")
+solid = SubResource("Resource_kn4g6")
+liquid = ExtResource("2_oji3k")
+gass = ExtResource("4_wfx46")
+
+[sub_resource type="Resource" id="Resource_il6mj"]
+script = ExtResource("6_oyqpq")
+solid = SubResource("Resource_kn4g6")
+liquid = ExtResource("2_oji3k")
+gass = ExtResource("4_wfx46")
+
+[resource]
+script = ExtResource("3_h4221")
+name = ""
+prim_texture = SubResource("Resource_il6mj")
+aux_texture = SubResource("Resource_4j1tm")
+uses_paste_phase = false
+color = Color(0.476259, 0.286219, 0.0528487, 1)
+heatCapacity = ExtResource("1_huuxg")
+normalDendity = 1250.0
+hardness = 1
+clicable = false
+clickAction = Callable()

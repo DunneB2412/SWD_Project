@@ -1,0 +1,63 @@
+[gd_resource type="Resource" script_class="Mineral" load_steps=12 format=3 uid="uid://cc0ra48ypmxmy"]
+
+[ext_resource type="Script" path="res://Scripts/Mineral/Definations/MineralHeatMap.gd" id="1_unsee"]
+[ext_resource type="Script" path="res://Scripts/Mineral/Definations/Mineral.gd" id="3_1ob37"]
+[ext_resource type="Resource" uid="uid://dxfsx02ei0ixi" path="res://Scripts/Mineral/common/Lava.tres" id="3_klysw"]
+[ext_resource type="Resource" uid="uid://6gcwk4a4iltc" path="res://Scripts/Mineral/common/Gass.tres" id="4_3av1b"]
+[ext_resource type="Resource" uid="uid://dv6ole473sjoa" path="res://Scripts/Mineral/common/Liquid.tres" id="5_2kxkj"]
+[ext_resource type="Script" path="res://Scripts/Mineral/Definations/MineralTexture.gd" id="6_w3qtq"]
+[ext_resource type="Script" path="res://Scripts/Mineral/Definations/BlockTextureMap.gd" id="7_urlgw"]
+
+[sub_resource type="Resource" id="Resource_f52ex"]
+script = ExtResource("7_urlgw")
+top = Vector2(2, 2)
+bottom = Vector2(2, 2)
+left = Vector2(2, 2)
+right = Vector2(2, 2)
+front = Vector2(2, 2)
+back = Vector2(2, 2)
+aplha = 1.0
+
+[sub_resource type="Resource" id="Resource_4xovo"]
+script = ExtResource("6_w3qtq")
+solid = SubResource("Resource_f52ex")
+paste = ExtResource("3_klysw")
+liquid = ExtResource("5_2kxkj")
+gass = ExtResource("4_3av1b")
+
+[sub_resource type="Resource" id="Resource_4bgb2"]
+script = ExtResource("1_unsee")
+shpSolid = 830.0
+shpPaste = 0.0
+shpLiquid = 200.0
+shpGass = 1000.0
+lhpPaste = 0.0
+lhpLiquid = 840.0
+lhpGass = 1000.0
+pcPaste = 0.0
+pcLiquid = 1712.0
+pcGass = 2357.0
+condsolid = 0.25
+condPaste = 0.25
+condLiquid = 0.25
+condGass = 0.25
+
+[sub_resource type="Resource" id="Resource_7tumh"]
+script = ExtResource("6_w3qtq")
+solid = SubResource("Resource_f52ex")
+paste = ExtResource("3_klysw")
+liquid = ExtResource("5_2kxkj")
+gass = ExtResource("4_3av1b")
+
+[resource]
+script = ExtResource("3_1ob37")
+name = ""
+prim_texture = SubResource("Resource_7tumh")
+aux_texture = SubResource("Resource_4xovo")
+uses_paste_phase = false
+color = Color(0.931652, 0.741576, 0.0473375, 1)
+heatCapacity = SubResource("Resource_4bgb2")
+normalDendity = 1870.0
+hardness = 2
+clicable = false
+clickAction = Callable()

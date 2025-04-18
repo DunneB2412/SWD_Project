@@ -1,0 +1,12 @@
+[gd_resource type="StandardMaterial3D" load_steps=2 format=3 uid="uid://cxskv0jkjkulh"]
+
+[ext_resource type="Texture2D" uid="uid://daywycf25x16i" path="res://materials/test/TextureAtlasnlarger.png" id="1_nsfy1"]
+
+[resource]
+transparency = 4
+shading_mode = 2
+vertex_color_use_as_albedo = true
+vertex_color_is_srgb = true
+albedo_texture = ExtResource("1_nsfy1")
+texture_filter = 0
+texture_repeat = false

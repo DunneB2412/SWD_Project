@@ -1,0 +1,8 @@
+[gd_scene load_steps=3 format=3 uid="uid://bi0yjsnm33vso"]
+
+[ext_resource type="Script" path="res://Scripts/Region/Region.gd" id="1_foowp"]
+[ext_resource type="Resource" uid="uid://n3fiyd610cdi" path="res://Scripts/Blocks/Libery.tres" id="2_8efsp"]
+
+[node name="Region" type="Node3D"]
+script = ExtResource("1_foowp")
+blockLib = ExtResource("2_8efsp")

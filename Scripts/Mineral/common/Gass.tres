@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="BlockTextureMap" load_steps=2 format=3 uid="uid://6gcwk4a4iltc"]
+
+[ext_resource type="Script" path="res://Scripts/Mineral/Definations/BlockTextureMap.gd" id="1_hwgs8"]
+
+[resource]
+script = ExtResource("1_hwgs8")
+top = Vector2(4, 3)
+bottom = Vector2(4, 3)
+left = Vector2(4, 3)
+right = Vector2(4, 3)
+front = Vector2(4, 3)
+back = Vector2(4, 3)
+aplha = 0.3

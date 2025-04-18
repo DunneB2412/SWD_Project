@@ -1,6 +1,0 @@
-[gd_scene format=3 uid="uid://bm0ffs8kunfgi"]
-
-[node name="TestPlayer" type="Node3D"]
-
-[node name="physical" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.129002, -0.311452, 0)
