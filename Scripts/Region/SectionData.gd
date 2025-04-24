@@ -51,6 +51,9 @@ static func setMeta(val: int, property: INC, meta: int) -> int:
 	return val
 static func readMeta(val:int, property: INC) -> int :
 	return (val & encoder[property]["mask"])>>encoder[property]["offset"]
+	
+static func kelToCel(kel: float):
+	return kel - 274.15
 
 #ref https://www.youtube.com/watch?v=vzRZjM9MTGw
 # https://docs.godotengine.org/en/stable/tutorials/io/saving_games.html
@@ -83,47 +86,56 @@ func getVal(pos: Vector3i) -> PackedInt64Array:
 		return data[flattenCord(pos)]
 	return [0]
 
-func addAt(pos: Vector3i, val: int, mass: int) -> void:
-	var v = setMeta(val,INC.MASS,mass)
-	#Handle when there is a new primary material.
-	var flat = flattenCord(pos)
-	if data.has(flat):
-		var cell: PackedInt64Array = data[flat]
-		for i in cell.size():
-			var mi = readMeta(cell[i],INC.MASS)
-			if mass>mi:
-				cell.insert(i,v)
-				return
-		cell.append(v)
-	else:
-		data.merge({flat:PackedInt64Array([v])}) #create a new one
-		
 func clear(pos: Vector3i) -> void:
 	var flat = flattenCord(pos)
 	data.erase(flat)
 	heatE.erase(flat)
 	
 		
-func consume(pos: Vector3i, part: int, mass: int) -> int :
+func updateMassFor(pos: Vector3i, part: int, mass: int) -> int :
 	var flat = flattenCord(pos)
+	var m = min(mass,metaLim(INC.MASS)) #protect mass, 
+	var v = setMeta(part,INC.MASS,m)
+	var t = readMeta(part,INC.BLOCK_TYPE)
+	
 	if !data.has(flat):
-		return 0
+		data.merge({flat:PackedInt64Array([v])}) #create a new one
+		return mass
 	
 	var cell: PackedInt64Array = data[flat]
+	#check if cell exists and update effective mass 'm'
 	for i in cell.size():
-		if readMeta(cell[i],INC.BLOCK_TYPE) == part:
-			var v = cell[i]
-			var m = readMeta(v, INC.MASS)
+		if i<cell.size() && readMeta(cell[i],INC.BLOCK_TYPE) == t:
+			v = cell[i]
+			var cm = readMeta(v, INC.MASS)
+			if (metaLim(INC.MASS)< cm + mass): #protect the sum, if the difference can't contain the new mass, use the dif as the change.
+				mass = metaLim(INC.MASS)-cm
+			if(cm+mass<0):#protect against negative mass, if mass change s greater than curent mass, use -current mass, 
+				mass = -cm
+			m = cm+mass
+			v = setMeta(part,INC.MASS,m) #write to the val, the new mass.
 			cell.remove_at(i)
-			if m > mass:
-				m = m-mass
-				addAt(pos,v,m)
-				return mass
-			else:
-				if cell.size()==0:
-					clear(pos) #if all minerals are consumed, clear
-				return m
-	return 0
+			i = cell.size()+1#ski[p the rest
+			
+	if m > 0:
+		var inPos = cell.size()
+		for j in cell.size(): #insert at correct position in cell data.
+			var mj = readMeta(cell[j],INC.MASS)
+			if m>mj:
+				inPos = j
+				j = cell.size()#skip to end now
+		cell.insert(inPos,v) # insert at found pos
+	else:
+		#if there is no mater left for this part, check if this empties the cell and clear.
+		if cell.size()==0:
+			clear(pos) #if all minerals are consumed, clear
+			
+	return mass # return the mass change.
+
+#func moveMass(a:Vector3i, b: Vector3i, part: int, mass: int):
+	
+
+
 
 func setTemp(pos:Vector3i, temp: float) -> void:
 	var flat = flattenCord(pos)
@@ -182,7 +194,5 @@ func info(pos: Vector3i) -> String :
 	var sum = 0
 	for v in vals:
 		sum += readMeta(v, INC.MASS)
-	if sum == 0:
-		print("ooh ")
 	st = st + "containing " + str(sum) + "g of material"
 	return st

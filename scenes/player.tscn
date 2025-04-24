@@ -28,8 +28,8 @@ var sensitivity = 0.002
 var tiltMax = deg_to_rad(95)
 var tiltMin = deg_to_rad(-85)
 
-var supper = false
-var paused = false
+var supper = true
+var paused = true
 
 @export var world: Node3D
 var focous
@@ -82,8 +82,8 @@ func ray_cast()-> void:
 		var norm = ray_cast_3d.get_collision_normal()
 		var pos = ray_cast_3d.get_collision_point()
 		
-		if world != null:
-			world_clicks(pos,norm)
+		#if world != null:
+			#world_clicks(pos,norm)
 	else:
 		crossair.rotation = 0
 		if focous != null: # we can only get a focous if the world was set, see below.

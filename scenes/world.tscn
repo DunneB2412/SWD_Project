@@ -22,11 +22,16 @@ glow_enabled = true
 environment = SubResource("Environment_tor05")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
-transform = Transform3D(-0.866025, -0.433013, 0.25, 0, 0.5, 0.866025, -0.5, 0.75, -0.433013, 0, 0, 0)
+transform = Transform3D(-0.866025, -0.195366, 0.460252, 0, 0.920505, 0.390731, -0.5, 0.338383, -0.79718, 0, 0, 0)
 light_color = Color(1, 0.904461, 0.851482, 1)
 shadow_enabled = true
 
 [node name="Player" parent="." node_paths=PackedStringArray("world") instance=ExtResource("2_206vo")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 64, 0)
 world = NodePath("..")
 
 [node name="Region" parent="." instance=ExtResource("2_s0845")]
+transform = Transform3D(0.999998, -0.00160892, -0.00145604, 0.00161209, 0.999996, 0.00218318, 0.00145254, -0.0021855, 0.999997, -0.0468769, -0.0993881, -0.0452418)
+worldSize = Vector3i(4, 2, 4)
+noSimThreads = 1
+simClockTime = 2000

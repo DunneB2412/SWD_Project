@@ -4,7 +4,7 @@ class_name Region
 
 var sections: Dictionary
 var entities: Array[EntityBase]
-var player: Player
+#var player: Player
 
 @export var worldSize: Vector3i = Vector3i(4,4,4)
 @export var loasQueueSize = 5
@@ -16,16 +16,105 @@ var player: Player
 @export var sectionSize: Vector3i = Vector3i(8,8,8)
 @export var blockSize: float = 1
 @export var blockLib: BlockLib
+@export var noSimThreads: int = 8
+@export var simClockTime: int = 1000
+
+var simThreads: Array[Thread]
+var masterSimThread: int
+var simQueue: Array
+var simQueueMutex: Mutex
+
+var meshThread: Thread
+
+@onready var player = $"../Player"
+
+var run: bool
+
 var noise_y_small: FastNoiseLite = FastNoiseLite.new()
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 	sections = {}
 	prep()
+	run = true
+	meshThread = Thread.new()
+	meshThread.start(_mesh)
+	
+	
+	var px = 0
+	var pz = 0
+	var py = getHeight(px,pz)+4
+	player.position = Vector3(px, py, pz)
+	
+	simQueueMutex = Mutex.new()
+	for i in noSimThreads:
+		var t = Thread.new()
+		t.start(_sim)
+		simThreads.append(t)
+	
+func _exit_tree() -> void:
+	run = false
+	if meshThread.is_started():
+		meshThread.wait_to_finish()
+	for t in simThreads:
+		if t.is_started():
+			t.wait_to_finish()
 
-
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(delta: float) -> void:
+func _enter_tree() -> void:
 	pass
+	#run = true
+	#if meshThread.is_started():
+		#meshThread.start(_mesh)
+	#for t in simThreads:
+		#if !t.is_started():
+			#t.start(_sim)
+
+func _mesh():
+	while run:
+		for sec: Section in sections.values():
+			if sec.updated:
+				sec.genMesh()
+
+func _sim():
+	simQueueMutex.lock()
+	if masterSimThread == 0:
+		masterSimThread = OS.get_thread_caller_id()
+	simQueueMutex.unlock()
+	while run:
+		if OS.get_thread_caller_id() == masterSimThread:
+			var start =  Time.get_ticks_msec()
+			simQueueMutex.lock()
+			simQueue = sections.keys().duplicate()
+			simQueueMutex.unlock()
+			
+			digestSimQueue()
+			
+			
+			var end =  Time.get_ticks_msec()
+			var dir = end-start
+			print(dir)
+			OS.delay_msec(max(simClockTime-dir,0))
+		else:
+			digestSimQueue()
+
+func digestSimQueue():
+	while simQueue.size()>0:
+		if(simQueueMutex.try_lock()):
+			if simQueue.size()>0:
+				var pos = simQueue.pop_front()
+				
+				var start =  Time.get_ticks_msec()
+				var section : Section = sections[pos]
+				if section.updated == false:#lets wait for the section to be updated first.
+					section.findAction()
+				var end =  Time.get_ticks_msec()
+				var dir = end-start
+				#print(str(OS.get_thread_caller_id())+" Tested "+str(pos)+ ", took "+ str(dir) +" ms to complete")
+			#else:
+				#print(str(OS.get_thread_caller_id())+" Tested  could not find a section in queue")
+			simQueueMutex.unlock()
+	#print(str(OS.get_thread_caller_id())+" finished for this cycle ")
+
+
 
 
 func prep():
@@ -34,7 +123,6 @@ func prep():
 			var pos = Vector2i(-(worldSize.x/2)+x,-(worldSize.z/2)+z)
 			col(pos)
 	for s : Section in sections.values():
-		s.genMesh()
 		add_child(s)
 #util
 func getHeight(x,z) -> int:
@@ -44,7 +132,8 @@ func getHeight(x,z) -> int:
 	var grad = noise_y_small.get_noise_2d(x*frequency.x,z*frequency.y)
 	return offset + (grad*amplitude)
 	
-	
+func getWaterLine() -> int:
+	return 60
 	
 
 func get_relatives(worldPos) -> Dictionary:
@@ -75,7 +164,7 @@ func getVal(cord: Vector3i) -> PackedInt64Array:
 	if sec == null:
 		return [0]
 	return sec.getVal(relative["block"])
-func changeAt(cord: Vector3i, val: int, mass: int) -> void:
+func addAt(cord: Vector3i, val: int, mass: int) -> void:
 	var relative = get_relatives(cord)
 	var sec = getSec(relative['sec'])
 	if sec == null:
@@ -121,7 +210,7 @@ func col(pos:Vector2i) -> void:
 	for x in sectionSize.x:  #load all surface sections. 
 		for z in sectionSize.z:
 			var wCord = Vector3i(x,0,z) + (Vector3i(pos.x,0,pos.y)*sectionSize)
-			var height = getHeight(wCord.x,wCord.z)
+			var height = 60#getHeight(wCord.x,wCord.z) ---------------------------------------------------------------
 			var sh = height/sectionSize.y
 			var sec = Vector3i(pos.x,sh,pos.y)
 			if !sections.has(sec):

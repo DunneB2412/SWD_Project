@@ -4,6 +4,7 @@
 
 [resource]
 transparency = 4
+depth_draw_mode = 1
 shading_mode = 2
 vertex_color_use_as_albedo = true
 vertex_color_is_srgb = true
