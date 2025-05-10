@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="BlockTextureMap" load_steps=2 format=3 uid="uid://du4mflfapvbhf"]
 
-[ext_resource type="Script" path="res://Scripts/Mineral/Definations/BlockTextureMap.gd" id="1_tbrtf"]
+[ext_resource type="Script" uid="uid://d4d2aj05ouj6a" path="res://Scripts/Mineral/Definations/BlockTextureMap.gd" id="1_tbrtf"]
 
 [resource]
 script = ExtResource("1_tbrtf")

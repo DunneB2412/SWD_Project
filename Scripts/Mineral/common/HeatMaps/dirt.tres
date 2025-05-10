@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="MineralHeatMap" load_steps=2 format=3 uid="uid://2oqb586wk22i"]
 
-[ext_resource type="Script" path="res://Scripts/Mineral/Definations/MineralHeatMap.gd" id="1_75ehp"]
+[ext_resource type="Script" uid="uid://d37lb6l4suonn" path="res://Scripts/Mineral/Definations/MineralHeatMap.gd" id="1_75ehp"]
 
 [resource]
 script = ExtResource("1_75ehp")
@@ -14,3 +14,7 @@ lhpGass = 0.0
 pcPaste = 0.0
 pcLiquid = 0.0
 pcGass = 0.0
+condsolid = 0.25
+condPaste = 0.25
+condLiquid = 0.25
+condGass = 0.25

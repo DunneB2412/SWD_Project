@@ -1,12 +1,12 @@
 [gd_resource type="Resource" script_class="Mineral" load_steps=12 format=3 uid="uid://cc0ra48ypmxmy"]
 
-[ext_resource type="Script" path="res://Scripts/Mineral/Definations/MineralHeatMap.gd" id="1_unsee"]
-[ext_resource type="Script" path="res://Scripts/Mineral/Definations/Mineral.gd" id="3_1ob37"]
+[ext_resource type="Script" uid="uid://d37lb6l4suonn" path="res://Scripts/Mineral/Definations/MineralHeatMap.gd" id="1_unsee"]
+[ext_resource type="Script" uid="uid://bgknwn5va48b0" path="res://Scripts/Mineral/Definations/Mineral.gd" id="3_1ob37"]
 [ext_resource type="Resource" uid="uid://dxfsx02ei0ixi" path="res://Scripts/Mineral/common/Lava.tres" id="3_klysw"]
 [ext_resource type="Resource" uid="uid://6gcwk4a4iltc" path="res://Scripts/Mineral/common/Gass.tres" id="4_3av1b"]
 [ext_resource type="Resource" uid="uid://dv6ole473sjoa" path="res://Scripts/Mineral/common/Liquid.tres" id="5_2kxkj"]
-[ext_resource type="Script" path="res://Scripts/Mineral/Definations/MineralTexture.gd" id="6_w3qtq"]
-[ext_resource type="Script" path="res://Scripts/Mineral/Definations/BlockTextureMap.gd" id="7_urlgw"]
+[ext_resource type="Script" uid="uid://dr6r178ahf0ds" path="res://Scripts/Mineral/Definations/MineralTexture.gd" id="6_w3qtq"]
+[ext_resource type="Script" uid="uid://d4d2aj05ouj6a" path="res://Scripts/Mineral/Definations/BlockTextureMap.gd" id="7_urlgw"]
 
 [sub_resource type="Resource" id="Resource_f52ex"]
 script = ExtResource("7_urlgw")

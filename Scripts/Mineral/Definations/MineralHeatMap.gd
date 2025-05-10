@@ -1,3 +1,4 @@
+@tool
 extends Resource
 class_name MineralHeatMap
 
@@ -19,3 +20,12 @@ class_name MineralHeatMap
 @export var condLiquid: float = 0.25
 @export var condGass: float = 0.25
  
+func getShp(phase:int):
+	return [shpSolid,shpLiquid,shpGass,shpSolid][phase]
+func getLhp(phase:int):
+	return [lhpLiquid,lhpGass,lhpPaste][phase]
+func getPCtemp(phase:int):
+	return [pcLiquid,pcGass,pcPaste][phase]
+	
+func getCond(phase:int):
+	return [condsolid,condLiquid,condGass,condPaste][phase]

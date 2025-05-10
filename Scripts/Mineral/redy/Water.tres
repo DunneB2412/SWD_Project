@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="Mineral" load_steps=5 format=3 uid="uid://ccccv575swarl"]
 
-[ext_resource type="Script" path="res://Scripts/Mineral/Definations/MineralHeatMap.gd" id="1_83g72"]
-[ext_resource type="Script" path="res://Scripts/Mineral/Definations/Mineral.gd" id="3_mi57o"]
+[ext_resource type="Script" uid="uid://d37lb6l4suonn" path="res://Scripts/Mineral/Definations/MineralHeatMap.gd" id="1_83g72"]
+[ext_resource type="Script" uid="uid://bgknwn5va48b0" path="res://Scripts/Mineral/Definations/Mineral.gd" id="3_mi57o"]
 [ext_resource type="Resource" uid="uid://c48ao2e505coa" path="res://Scripts/Mineral/common/mineral_textures/freezing.tres" id="4_aaooi"]
 
 [sub_resource type="Resource" id="Resource_co6cj"]

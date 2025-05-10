@@ -1,8 +1,8 @@
 [gd_resource type="Resource" script_class="MineralTexture" load_steps=7 format=3 uid="uid://bx6ycftlht65n"]
 
-[ext_resource type="Script" path="res://Scripts/Mineral/Definations/MineralTexture.gd" id="1_68ut8"]
+[ext_resource type="Script" uid="uid://dr6r178ahf0ds" path="res://Scripts/Mineral/Definations/MineralTexture.gd" id="1_68ut8"]
 [ext_resource type="Resource" uid="uid://dv6ole473sjoa" path="res://Scripts/Mineral/common/Liquid.tres" id="1_vmss0"]
-[ext_resource type="Script" path="res://Scripts/Mineral/Definations/BlockTextureMap.gd" id="2_kertt"]
+[ext_resource type="Script" uid="uid://d4d2aj05ouj6a" path="res://Scripts/Mineral/Definations/BlockTextureMap.gd" id="2_kertt"]
 [ext_resource type="Resource" uid="uid://dxfsx02ei0ixi" path="res://Scripts/Mineral/common/Lava.tres" id="2_q5kr7"]
 
 [sub_resource type="Resource" id="Resource_81sns"]

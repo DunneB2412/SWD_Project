@@ -92,9 +92,9 @@ func loadSection() -> void:
 				height = root.getHeight(wCord.x,wCord.z) - (size.y*pos.y)
 				waterHeight = root.getWaterLine() - (size.y*pos.y)
 				height = waterHeight
-			if wCord.x ==4 and wCord.z == 4:
-				waterHeight = waterHeight+4
-			
+			if x == 4 and z == 4:
+				waterHeight += 4
+			 
 			var soil = 2
 			if height - 3 < waterHeight:
 				soil = 8
@@ -121,6 +121,8 @@ func loadSection() -> void:
 					if y <= height && randi_range(0,10)>=8:
 						addAt(Vector3i(x,y,z),5,1000)
 					setTemp(Vector3i(x,y,z),120- ((size.y*pos.y)+y))
+					if x== 4 && z == 4:
+						addHeatAt(Vector3i(x,y,z), 100000)
 
 func getOverflow(cord) -> Vector3i:
 	var res = Vector3i(0,0,0)
@@ -132,7 +134,7 @@ func getOverflow(cord) -> Vector3i:
 	return res
 
 
-func genMesh() -> void:
+func genMesh(colide = true) -> void:
 	var ts = SurfaceTool.new()
 	ts.begin(Mesh.PRIMITIVE_TRIANGLES)
 	ts.set_smooth_group(-1)
@@ -145,10 +147,11 @@ func genMesh() -> void:
 	dataMutex.lock()
 	var cells = data.get_filled_cells().duplicate()
 	dataMutex.unlock()
+	var visited: Array[Vector3i] = []
 	if cells.size()>0:
-		
-		for c in cells:
-			createBlock(c,ts,con,[])
+		while cells.size()>0:
+			var c = cells.pop_front()
+			createBlock(c,ts,con,visited, cells)
 		
 	ts.generate_normals(false)
 	meshMutex.lock()
@@ -173,55 +176,74 @@ func DebugOutline(con: Node3D):
 	mesh_instance.name = "outline"
 	con.add_child(mesh_instance)
 
-func createBlock(cord : Vector3i, surface: SurfaceTool, debcon: Node3D, visited: Array[Vector3i]):
-	var cell = data.getVal(cord).duplicate() #we are only considering one atm
+func createBlock(cord : Vector3i, surface: SurfaceTool, debcon: Node3D, visited: Array[Vector3i], queue: Array ):
+	if visited.has(cord):
+		return
 	
+	var cell = getVal(cord)
 	#there are a bunch of flags that we do not need to encode in each min, only in cell.
 	#may not use var as mineral model dose nto require it.
 	#record on textuure if it should be notm aligned, world aligned or rotatable
-	var rot
-	var norm = 0
+	var rot = data.readMeta(cell[0],INC.ROTATION)
+	var norm = data.readMeta(cell[0],INC.NORM)
 	
-	for i in min(cell.size(),5):
-		var min = cell[i]
-		var blockT = SectionData.readMeta(min,INC.BLOCK_TYPE)
-		var phase = SectionData.readMeta(min,INC.PHASE)
+	if true:
+		visited.append(cord)
+		for dir in Global.DIR.values():
+			var offset = Global.OFFSETS[dir] 
+			var altCell = getVal(cord+offset)
+			if altCell[0] > 0:
+				var nCord = cord+offset
+				if getOverflow(nCord) == Global.REF_VEC3 && !visited.has(nCord) && !queue.has(nCord) :
+					queue.append(nCord)
+				if !(
+					(data.readMeta(altCell[0],INC.OPAQUE)) ||
+				 	(data.readMeta(cell[0],INC.BLOCK_TYPE) == data.readMeta(altCell[0],INC.BLOCK_TYPE))
+					):
+					createFace(cord,dir, cell, rot, norm, surface, debcon)
+			else: #nothing was fopund so just make face.
+				createFace(cord,dir, cell, rot, norm, surface, debcon)
+
+func createFace(cord: Vector3i, dir :Global.DIR, cell: PackedInt64Array, rot: int, notm: int, st: SurfaceTool, debcon):
+	for i in cell.size():
+		var mineral = cell[i]
+		var t = data.readMeta(mineral, INC.BLOCK_TYPE)
+		var m = data.readMeta(mineral,INC.BLOCK_TYPE)
+		var phase = data.readMeta(mineral,INC.PHASE)
 		
-		var bockTextures
-		if i ==0:
-			#norm = SectionData.readMeta(min,SectionData.INC.NORM)
-			rot= SectionData.readMeta(min,INC.ROTATION)
-			bockTextures = lib.blocks[blockT].mineral.prim_texture.getPhase(phase).getTextures()
-		else:
-			bockTextures = lib.blocks[blockT].mineral.aux_texture.getPhase(phase).getTextures()
-		
-		var color = lib.blocks[blockT].mineral.color
+		var color = lib.blocks[t].mineral.color
 		color.a = (1.0/(i+1)) # * min(lib.blocks[blockT].mineral.normalDendity/ data.readMeta(min,INC.MASS),1)
-		var template = lib.blocks[blockT].FULL_BLOCK
+		var template = lib.blocks[t].FULL_BLOCK
 		
+		var texture 
+		if i ==0:
+			texture = lib.blocks[t].mineral.prim_texture.getPhase(phase).getTextures()[dir]
+		else:
+			texture = lib.blocks[t].mineral.aux_texture.getPhase(phase).getTextures()[dir]
+			
+		addToFace(template.getFace(dir),template.vertices,template.Reset, st,cord,texture,color,rot)
 		
-		for f: Face in template.Faces:
-			var offset = Global.OFFSETS[f.dir]
-			var n = getVal(cord+offset)[0]
-			var t = SectionData.readMeta(n,INC.BLOCK_TYPE)
-			var opaque = SectionData.readMeta(n,INC.OPAQUE)
-			if !opaque && (t != blockT):
-				if f.dir == Global.DIR.UP ||  f.dir == Global.DIR.DOWN:
-					createFace(f.vers,template.vertices, template.Reset,surface,cord,bockTextures[(f.dir+norm)%6],color,rot)
-				else:
-					createFace(f.vers,template.vertices, template.Reset,surface,cord,bockTextures[(((f.dir-2)+rot)%4)+2],color,0)
-				if debugMode && i==0:
-					var test = Label3D.new()
-					test.text = str(cord+(pos*size))+"\n"+data.info(cord)
-					test.position = (cord * cellSize) + (Vector3(cellSize,cellSize,cellSize)/2) + (Global.OFFSETS[f.dir]*0.51)
-					test.font_size = 12
-					test.rotation = Vector3(deg_to_rad(-90)*offset.y,(deg_to_rad(90)*offset.x)+(deg_to_rad(180)*min(offset.z,0)),0)
-					debcon.add_child(test)
-			#else:TODO use a recursion for here. 
-				#createBlock()
+	if debugMode :
+		var offset = Global.OFFSETS[dir] 
+		var test = Label3D.new()
+		test.text = str(cord+(pos*size))+"\n"+info(cord)
+		test.position = (cord * cellSize) + (Vector3(cellSize,cellSize,cellSize)/2) + (Global.OFFSETS[dir]*0.51)
+		test.font_size = 12
+		test.rotation = Vector3(deg_to_rad(-90)*offset.y,(deg_to_rad(90)*offset.x)+(deg_to_rad(180)*min(offset.z,0)),0)
+		debcon.add_child(test)
 
 
-func createFace(face: PackedInt32Array, vert:PackedVector3Array, reset: Vector3, surface: SurfaceTool ,cCord : Vector3, faceT: Vector2,color: Color, rot: int = 0, rScale: float = 1):
+func info(pos: Vector3i) -> String :
+	var st = "temp " + str(snappedf(getTemp(pos),0.01)) +"\n"
+	var vals = getVal(pos)
+	st = st + "Has "+ str(vals.size()) +" mineral present\n"
+	var sum = 0
+	for v in vals:
+		sum += data.readMeta(v, INC.MASS)
+	st = st + "containing " + str(sum) + "g of material"
+	return st
+
+func addToFace(face: PackedInt32Array, vert:PackedVector3Array, reset: Vector3, surface: SurfaceTool ,cCord : Vector3, faceT: Vector2,color: Color, rot: int = 0, rScale: float = 1):
 	var a = (vert[face[0]]*(cellSize*rScale)) + (cCord * cellSize) + reset
 	var b = (vert[face[1]]*(cellSize*rScale)) + (cCord * cellSize) + reset
 	var c = (vert[face[2]]*(cellSize*rScale)) + (cCord * cellSize) + reset
@@ -243,22 +265,21 @@ func createFace(face: PackedInt32Array, vert:PackedVector3Array, reset: Vector3,
 	
 #util functions
 #mater handelers
-func getVal(cord: Vector3i) -> PackedInt64Array:
-	var overflow = getOverflow(cord)
+func getVal(cord: Vector3i, overflow: Vector3i = getOverflow(cord)) -> PackedInt64Array:
 	if overflow == Global.REF_VEC3:
-		
+		var cell = []
 		dataMutex.lock()
-		var cell = data.getVal(cord).duplicate()
+		for v:int in data.getVal(cord):
+			cell.append(v)
 		dataMutex.unlock()
 		return cell
+		
 	elif root != null && root.has_method("getVal"):
 		var bind: Vector3i = Vector3i(posmod(cord.x, size.x),posmod(cord.y, size.y),posmod(cord.z, size.z))
 		return root.getVal(((overflow+pos)*size)+bind)
 	return [0]
-func addAt(cord: Vector3i, val: int, mass: int) -> void:
-	var overflow = getOverflow(cord)
+func addAt(cord: Vector3i, val: int, mass: int, overflow: Vector3i = getOverflow(cord)) -> void:
 	if overflow == Global.REF_VEC3:
-		#print(str(OS.get_thread_caller_id())+" locking "+ str(pos) +" data at 'add at'")
 		dataMutex.lock()
 		data.updateMassFor(cord,val,mass)
 		dataMutex.unlock()
@@ -271,30 +292,50 @@ func addAt(cord: Vector3i, val: int, mass: int) -> void:
 		var bind: Vector3i = Vector3i(posmod(cord.x, size.x),posmod(cord.y, size.y),posmod(cord.z, size.z))
 		root.addAt((((overflow+pos)*size)+bind),val,mass)
 func initWith(cord:Vector3i, val: int):
-	addAt(cord,val, lib.blocks[SectionData.readMeta(val,INC.BLOCK_TYPE)].mineral.normalDendity - 500)# (randi_range(-150,150)))
+	addAt(cord,val, lib.blocks[SectionData.readMeta(val,INC.BLOCK_TYPE)].mineral.normalDendity + (randi_range(-150,150)))
 	
 #temprature handelers
-func setTemp(cord: Vector3i, val:float):
-	var overflow = getOverflow(cord)
+func avgHeatCapAt(cell: PackedInt64Array) -> float:
+	var sum = 0
+	for d in cell:
+		var type =data.readMeta(d,INC.BLOCK_TYPE)
+		var phase =  data.readMeta(d,INC.PHASE)
+		sum += data.masstoKG(data.readMeta(d,INC.MASS))*lib.blocks[type].mineral.heatCapacity.getShp(phase)
+	return sum/cell.size()
+
+func setTemp(cord: Vector3i, val:float, overflow: Vector3i = getOverflow(cord)):
 	if overflow == Global.REF_VEC3:
-		data.setTemp(cord,val)
-		
-		
+		addHeatAt(cord, avgHeatCapAt(getVal(cord,overflow))*val,overflow)
 	elif root != null && root.has_method("setTemp"):
 		var bind: Vector3i = Vector3i(posmod(cord.x, size.x),posmod(cord.y, size.y),posmod(cord.z, size.z))
 		root.setTemp((((overflow+pos)*size)+bind),val)
-func getTemp(cord: Vector3i) -> float:
-	var overflow = getOverflow(cord)
+func getTemp(cord: Vector3i, overflow: Vector3i = getOverflow(cord)) -> float:
 	if overflow == Global.REF_VEC3:
-		return data.getTemp(cord)
+		return getHeatAt(cord, overflow) / avgHeatCapAt(getVal(cord,overflow))
 	elif root != null && root.has_method("getTemp"):
 		var bind: Vector3i = Vector3i(posmod(cord.x, size.x),posmod(cord.y, size.y),posmod(cord.z, size.z))
 		return root.getTemp((((overflow+pos)*size)+bind))
 	return 0
-func addHeatAt(cord: Vector3i, heat: int):
-	var overflow = getOverflow(cord)
+	
+	
+	
+func getHeatAt(cord: Vector3i, overflow: Vector3i = getOverflow(cord)) -> int:
 	if overflow == Global.REF_VEC3:
+		dataMutex.lock()
+		var heat = data.getHeatAt(cord)
+		dataMutex.unlock()
+		return heat
+	elif root != null && root.has_method("getHeatAt"):
+		var bind: Vector3i = Vector3i(posmod(cord.x, size.x),posmod(cord.y, size.y),posmod(cord.z, size.z))
+		return root.getHeatAt((((overflow+pos)*size)+bind))
+	return 0
+func addHeatAt(cord: Vector3i, heat: int, overflow: Vector3i = getOverflow(cord)):
+	if overflow == Global.REF_VEC3:
+		dataMutex.lock()
 		data.addHeatAt(cord, heat)
+		dataMutex.unlock()
+		#if debugMode:
+			#updated = true
 	elif root != null && root.has_method("addHeatAt"):
 		var bind: Vector3i = Vector3i(posmod(cord.x, size.x),posmod(cord.y, size.y),posmod(cord.z, size.z))
 		root.addHeatAt((((overflow+pos)*size)+bind),heat)
@@ -311,16 +352,40 @@ func findAction():
 		var cell = data.getVal(pos)
 		
 		for j in cell.size():
-			var m = cell[j]
-			if SectionData.readMeta(m,INC.PHASE) >0 && j <= 4:
-				fluidAct(pos,m)
-			for dir in Global.OFFSETS.values():
-				var alt = pos+dir
-				if !vis.has(alt):
-					pass
+			var part = cell[j]
+			tempAct(pos, part)
+			if SectionData.readMeta(part,INC.PHASE) >0 && j <= 4:
+				fluidAct(pos,part)
+			#for dir in Global.OFFSETS.values():
+				#var alt = pos+dir
+				#if !vis.has(alt):
+					#pass
 			
-		
+func tempAct(cord:Vector3i, part: int):
+	var type = data.readMeta(part, INC.BLOCK_TYPE)
+	var phase = data.readMeta(part, INC.PHASE)
+	var mass = data.readMeta(part, INC.MASS)
 	
+	var mineral = lib.blocks[type].mineral
+	
+	var sum = getTemp(cord)
+	var suitable = [[Global.REF_VEC3,sum, mineral.heatCapacity.getCond(phase)]]
+	for offset in Global.OFFSETS.values():
+		if getVal(cord+offset)[0] != 0:
+			var temp = getTemp(cord+offset)
+			suitable.append([offset,temp, mineral.heatCapacity.getCond(phase)])
+			sum+= temp
+	var avg = sum/suitable.size()
+	for o in suitable:
+		var ncord = cord+o[0]
+		var dif = (avg-o[1])*o[2]
+		addHeatAt(ncord,dif)
+		
+	#handle phase change.
+	var temp = getTemp(cord)
+	if temp > mineral.heatCapacity.getPCtemp(phase):
+		var lhp = mineral.heatCapacity.getLhp(phase)
+		
 
 func fluidAct(cord:Vector3i, m: int):
 	var t = SectionData.readMeta(m,INC.BLOCK_TYPE)
@@ -389,3 +454,55 @@ func fluidAct(cord:Vector3i, m: int):
 		var e = cord+o[0]
 		var dif = (avgm-o[1])*o[2]
 		addAt(e,m,dif)
+		
+	
+	mas = avgm
+	if mas> den:
+		altdata = data.getVal(cord+Global.OFFSETS[Global.DIR.UP])[0] #we will only consider the primary
+		altp = SectionData.readMeta(altdata,INC.PHASE)
+		if altdata == 0 || altp > 0:
+			var altT = SectionData.readMeta(altdata, INC.BLOCK_TYPE)
+			if altT != t:
+				var altd = lib.blocks[altT].mineral.normalDendity
+				if altd < den:
+					var dif = mas - den #send as much as naturally permited.
+					addAt(cord,m,-dif)
+					mas = mas - dif
+					addAt(cord+Global.OFFSETS[Global.DIR.UP],m,dif)
+					
+		else:
+			#permuable ?
+			pass
+		
+
+#func checkFlow(cord:Vector3i,dir:Global.DIR,t:int,den:int,mas:int ):
+	#var altdata = data.getVal(cord+Global.OFFSETS[Global.DIR.UP])[0] #we will only consider the primary
+	#var altp = SectionData.readMeta(altdata,INC.PHASE)
+	#if altdata == 0 || altp > 0:
+		#var altT = SectionData.readMeta(altdata, INC.BLOCK_TYPE)
+		#if altT == t:
+			#var altM = SectionData.readMeta(altdata, INC.MASS)
+			#var avg = altM+mas/2
+			#if avg > den:
+				#addAt(cord,m,avg-mas)
+				#addAt(cord+Global.OFFSETS[Global.DIR.DOWN],m,avg-altM)
+				#mas = avg
+			#else:
+				#var dif = min(den -altM, mas) # at most current mass
+				#addAt(cord,m,-dif)
+				#mas = mas - dif
+				#addAt(cord+Global.OFFSETS[Global.DIR.DOWN],m,dif)
+				#if  mas == 0:
+					#return
+		#else:			
+			#var altd = lib.blocks[altT].mineral.normalDendity
+			#if altd < den:
+				#var dif = min(den, mas) #send as much as naturally permited.
+				#addAt(cord,m,-dif)
+				#mas = mas - dif
+				#addAt(cord+Global.OFFSETS[Global.DIR.DOWN],m,dif)
+				#if mas == 0:
+					#return
+	#else:
+		##permuable ?
+		#pass

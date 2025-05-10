@@ -1,8 +1,8 @@
 [gd_resource type="Resource" script_class="Mineral" load_steps=5 format=3 uid="uid://du6fqcfw22yqi"]
 
 [ext_resource type="Resource" uid="uid://c48ao2e505coa" path="res://Scripts/Mineral/common/mineral_textures/freezing.tres" id="1_5hls5"]
-[ext_resource type="Script" path="res://Scripts/Mineral/Definations/MineralHeatMap.gd" id="2_s6j5k"]
-[ext_resource type="Script" path="res://Scripts/Mineral/Definations/Mineral.gd" id="3_dgm8r"]
+[ext_resource type="Script" uid="uid://d37lb6l4suonn" path="res://Scripts/Mineral/Definations/MineralHeatMap.gd" id="2_s6j5k"]
+[ext_resource type="Script" uid="uid://bgknwn5va48b0" path="res://Scripts/Mineral/Definations/Mineral.gd" id="3_dgm8r"]
 
 [sub_resource type="Resource" id="Resource_m4pe2"]
 script = ExtResource("2_s6j5k")

@@ -1,10 +1,9 @@
 [gd_scene load_steps=3 format=3 uid="uid://bi0yjsnm33vso"]
 
-[ext_resource type="Script" path="res://Scripts/Region/Region.gd" id="1_foowp"]
+[ext_resource type="Script" uid="uid://bcc0ouro16txi" path="res://Scripts/Region/Region.gd" id="1_foowp"]
 [ext_resource type="Resource" uid="uid://n3fiyd610cdi" path="res://Scripts/Blocks/Libery.tres" id="2_8efsp"]
 
 [node name="Region" type="Node3D"]
-transform = Transform3D(0.999998, -0.0016395, -0.00168896, 0.00164391, 0.999995, 0.00261166, 0.00168468, -0.0026144, 0.999996, -0.0163555, -0.0563965, -0.00191065)
 script = ExtResource("1_foowp")
 worldSize = Vector3i(16, 16, 16)
 globalAmp = 2

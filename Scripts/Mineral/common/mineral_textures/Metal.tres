@@ -1,9 +1,9 @@
 [gd_resource type="Resource" script_class="MineralTexture" load_steps=7 format=3 uid="uid://bugynda8tfris"]
 
-[ext_resource type="Script" path="res://Scripts/Mineral/Definations/BlockTextureMap.gd" id="1_ii37w"]
+[ext_resource type="Script" uid="uid://d4d2aj05ouj6a" path="res://Scripts/Mineral/Definations/BlockTextureMap.gd" id="1_ii37w"]
 [ext_resource type="Resource" uid="uid://6gcwk4a4iltc" path="res://Scripts/Mineral/common/Gass.tres" id="1_svb4a"]
 [ext_resource type="Resource" uid="uid://dv6ole473sjoa" path="res://Scripts/Mineral/common/Liquid.tres" id="2_cq0as"]
-[ext_resource type="Script" path="res://Scripts/Mineral/Definations/MineralTexture.gd" id="2_gaayf"]
+[ext_resource type="Script" uid="uid://dr6r178ahf0ds" path="res://Scripts/Mineral/Definations/MineralTexture.gd" id="2_gaayf"]
 
 [sub_resource type="Resource" id="Resource_x7n60"]
 script = ExtResource("1_ii37w")

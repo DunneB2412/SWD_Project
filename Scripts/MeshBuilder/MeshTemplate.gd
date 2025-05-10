@@ -7,4 +7,8 @@ class_name MeshTemplate
 @export var Reset: Vector3
 
 
-#func getFace()
+func getFace(dir: Global.DIR) -> PackedInt32Array:
+	for f in Faces:
+		if f.dir == dir:
+			return f.vers
+	return []

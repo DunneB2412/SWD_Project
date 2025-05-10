@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="BlockLib" load_steps=24 format=3 uid="uid://n3fiyd610cdi"]
 
-[ext_resource type="Script" path="res://Scripts/Blocks/Definations/Block.gd" id="1_67hgq"]
+[ext_resource type="Script" uid="uid://lfh5jmen637d" path="res://Scripts/Blocks/Definations/Block.gd" id="1_67hgq"]
 [ext_resource type="Resource" uid="uid://du6fqcfw22yqi" path="res://Scripts/Mineral/redy/Air.tres" id="2_om6fk"]
 [ext_resource type="Resource" uid="uid://c4ycbtpg5b0ef" path="res://Scripts/Blocks/fullBlockMechTemplate.tres" id="3_kg2ji"]
 [ext_resource type="Resource" uid="uid://l0aavxsexsbn" path="res://Scripts/Mineral/redy/LimeStone.tres" id="4_5bbeg"]
@@ -9,7 +9,7 @@
 [ext_resource type="Material" uid="uid://cxskv0jkjkulh" path="res://materials/test/fullMap.tres" id="6_mp6v5"]
 [ext_resource type="Resource" uid="uid://djqsjneorge8d" path="res://Scripts/Mineral/redy/Grass.tres" id="6_wkad1"]
 [ext_resource type="Resource" uid="uid://kkis2wf2dtn3" path="res://Scripts/Mineral/redy/Iron.tres" id="7_qbi7j"]
-[ext_resource type="Script" path="res://Scripts/Blocks/Definations/BlockLib.gd" id="7_xm02i"]
+[ext_resource type="Script" uid="uid://cvn34g0jcpixs" path="res://Scripts/Blocks/Definations/BlockLib.gd" id="7_xm02i"]
 [ext_resource type="Resource" uid="uid://biktou365hdax" path="res://Scripts/Mineral/redy/IronOxyde.tres" id="8_21n1q"]
 [ext_resource type="Resource" uid="uid://ccccv575swarl" path="res://Scripts/Mineral/redy/Water.tres" id="10_1staj"]
 [ext_resource type="Resource" uid="uid://cc0ra48ypmxmy" path="res://Scripts/Mineral/redy/Sand.tres" id="11_xbeok"]

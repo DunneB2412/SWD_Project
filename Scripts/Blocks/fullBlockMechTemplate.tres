@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="MeshTemplate" load_steps=9 format=3 uid="uid://c4ycbtpg5b0ef"]
 
-[ext_resource type="Script" path="res://Scripts/MeshBuilder/Face.gd" id="1_sghb4"]
-[ext_resource type="Script" path="res://Scripts/MeshBuilder/MeshTemplate.gd" id="2_brlot"]
+[ext_resource type="Script" uid="uid://dhp0lmbogsgk" path="res://Scripts/MeshBuilder/Face.gd" id="1_sghb4"]
+[ext_resource type="Script" uid="uid://bq1sinkm8ub2h" path="res://Scripts/MeshBuilder/MeshTemplate.gd" id="2_brlot"]
 
 [sub_resource type="Resource" id="Resource_jx8jx"]
 script = ExtResource("1_sghb4")

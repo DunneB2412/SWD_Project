@@ -41,6 +41,18 @@ const encoder = {
 	INC.SPARE2	:		{"mask":0x4000000000000000,"max":0x0001 , "offset": 62}, # 0100 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000
 	# cant use this, see issue https://github.com/godotengine/godot/issues/36387 "spare3"	:		{"mask":0x8000000000000000,"max":0x0001 , "offset": 63}, # 1000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000
 }
+#m + t+pa
+#26+10+2 = 38
+#densist material is osmium at 40,700 kg per m3 according to below article
+#https://www.nuclear-power.com/nuclear-engineering/thermodynamics/thermodynamic-properties/what-is-density-physics/densest-materials-on-the-earth/
+# it may be best to use gram as smallest mass unit and 26 bits, this allows up to 66 ton, even allowing for fictional more dence materials.
+#actual max = 67108864
+
+#TODO fix redundant bits Below are some potentially waste flags, 
+#f+v+n+r+s+pc+1
+#8+5+3+2+4+2 +1 = 25 waste bits.
+
+#there may still be some use in the rot and norm
 
 static func metaLim(property: INC) -> int:
 	return encoder[property]["max"]
@@ -54,6 +66,10 @@ static func readMeta(val:int, property: INC) -> int :
 	
 static func kelToCel(kel: float):
 	return kel - 274.15
+	
+static func masstoKG(mass:int) -> float:
+	return float(mass)/1000.0
+	
 
 #ref https://www.youtube.com/watch?v=vzRZjM9MTGw
 # https://docs.godotengine.org/en/stable/tutorials/io/saving_games.html
@@ -64,7 +80,7 @@ var size: Vector3i
 var name: String
 var lib: BlockLib
 
-## encoding into a 64 bit int 3x 20 bit numbers. with 4 bits left perhaps use this to flaten. safer aswell.
+## TODO encoding into a 64 bit int 3x 20 bit numbers. with 4 bits left perhaps use this to flaten. safer aswell.
 #const flag = 0x0fffff
 #const offser = 20
 
@@ -73,6 +89,7 @@ func _init(sizeIn: Vector3i, nameIn: String) -> void:
 	self.size = sizeIn
 	self.name = nameIn
 
+#should return a tree like structure. so that it may naturally binary search. each node has 4 children.
 func get_filled_cells() -> Array:
 	var flats = data.keys()
 	var vects = []
@@ -100,6 +117,7 @@ func updateMassFor(pos: Vector3i, part: int, mass: int) -> int :
 	
 	if !data.has(flat):
 		data.merge({flat:PackedInt64Array([v])}) #create a new one
+		heatE.merge({flat:0})
 		return mass
 	
 	var cell: PackedInt64Array = data[flat]
@@ -133,34 +151,13 @@ func updateMassFor(pos: Vector3i, part: int, mass: int) -> int :
 	return mass # return the mass change.
 
 #func moveMass(a:Vector3i, b: Vector3i, part: int, mass: int):
-	
 
 
-
-func setTemp(pos:Vector3i, temp: float) -> void:
-	var flat = flattenCord(pos)
-	if !data.has(flat):
-		return #can't have temprature in a vaccume
-	var cell: PackedInt64Array = data[flat]
-	var avg  = avgHeatCapAt(cell)
-	
-	if heatE.has(flat):
-		heatE = temp*avg
-	else:
-		heatE.merge({flat: temp*avg})
-	
-	#for i in cell.size():
-		#var t = readMeta(cell[i],INC.BLOCK_TYPE)
-		
-		
-func getTemp(pos:Vector3i) -> float :
+func getHeatAt(pos: Vector3i) -> int:
 	var flat = flattenCord(pos)
 	if !(data.has(flat) && heatE.has(flat)):
-		return 0.0#no temprature in a vaccume
-	var cell: PackedInt64Array = data[flat]
-	var avg  = avgHeatCapAt(cell)
-	
-	return heatE[flat]/avg
+		return 0 #no temprature in a vaccume
+	return heatE[flat]
 
 func addHeatAt(pos:Vector3i,j:int) -> void:
 	var flat = flattenCord(pos)
@@ -181,18 +178,4 @@ func popCord(pos: int) -> Vector3i:
 func save():
 	ResourceSaver.save(self,"res://saves/"+name+".tres")
 
-func avgHeatCapAt(cell: PackedInt64Array) -> float:
-	var sum = 0
-	for d in cell:
-		sum += readMeta(d,INC.MASS)
-	return sum/cell.size()
 	
-func info(pos: Vector3i) -> String :
-	var st = "temp " + str(getTemp(pos)) +"\n"
-	var vals = getVal(pos)
-	st = st + "Has "+ str(vals.size()) +" mineral present\n"
-	var sum = 0
-	for v in vals:
-		sum += readMeta(v, INC.MASS)
-	st = st + "containing " + str(sum) + "g of material"
-	return st

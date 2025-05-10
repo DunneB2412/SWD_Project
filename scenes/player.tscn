@@ -1,7 +1,7 @@
 [gd_scene load_steps=8 format=3 uid="uid://c05ub2i700151"]
 
 [ext_resource type="Texture2D" uid="uid://bqp1bvxh20nm5" path="res://assets/crosshair161.png" id="2_xmgmu"]
-[ext_resource type="Script" path="res://Scripts/gui/crossair.gd" id="3_yniyc"]
+[ext_resource type="Script" uid="uid://f400o57meoxb" path="res://Scripts/gui/crossair.gd" id="3_yniyc"]
 
 [sub_resource type="GDScript" id="GDScript_r2jjo"]
 script/source = "extends CharacterBody3D
@@ -162,7 +162,6 @@ blend_mode = 2
 default_font_size = 20
 
 [node name="Player" type="CharacterBody3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.02701, 0)
 script = SubResource("GDScript_r2jjo")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]

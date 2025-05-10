@@ -4,7 +4,7 @@ class_name Region
 
 var sections: Dictionary
 var entities: Array[EntityBase]
-#var player: Player
+var player: Player
 
 @export var worldSize: Vector3i = Vector3i(4,4,4)
 @export var loasQueueSize = 5
@@ -23,33 +23,43 @@ var simThreads: Array[Thread]
 var masterSimThread: int
 var simQueue: Array
 var simQueueMutex: Mutex
-
+var simSemaphore: Semaphore
+var simQueueSync: int
 var meshThread: Thread
 
-@onready var player = $"../Player"
+var newQueue: Array[Section]
+var newQueueMutex: Mutex
 
+var pPos: Vector3i
 var run: bool
 
 var noise_y_small: FastNoiseLite = FastNoiseLite.new()
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 	sections = {}
+	
+	newQueue = []
+	newQueueMutex = Mutex.new()
+	
 	prep()
+	
 	run = true
 	meshThread = Thread.new()
 	meshThread.start(_mesh)
 	
-	
 	var px = 0
 	var pz = 0
 	var py = getHeight(px,pz)+4
-	player.position = Vector3(px, py, pz)
+	pPos =  Vector3(px, py, pz)
+	player = Player.new(pPos,self,Vector3(0.8,0.8,0.8))
 	
 	simQueueMutex = Mutex.new()
+	simSemaphore = Semaphore.new()
 	for i in noSimThreads:
 		var t = Thread.new()
 		t.start(_sim)
 		simThreads.append(t)
+	print_tree_pretty()
 	
 func _exit_tree() -> void:
 	run = false
@@ -67,11 +77,26 @@ func _enter_tree() -> void:
 	#for t in simThreads:
 		#if !t.is_started():
 			#t.start(_sim)
+			
+func _process(_delta: float) -> void:
+	pPos = player.position
+	newQueueMutex.lock()
+	var s = newQueue.size()
+	newQueueMutex.unlock()
+	while s > 0:
+		newQueueMutex.lock()
+		var sec = newQueue.pop_front()
+		s = newQueue.size()
+		newQueueMutex.unlock()
+		add_child(sec)
+		
+
 
 func _mesh():
 	while run:
 		for sec: Section in sections.values():
 			if sec.updated:
+				#TimedExe(sec.genMesh, "genMesh on "+str(sec.name))
 				sec.genMesh()
 
 func _sim():
@@ -82,39 +107,53 @@ func _sim():
 	while run:
 		if OS.get_thread_caller_id() == masterSimThread:
 			var start =  Time.get_ticks_msec()
-			simQueueMutex.lock()
-			simQueue = sections.keys().duplicate()
-			simQueueMutex.unlock()
-			
-			digestSimQueue()
-			
-			
-			var end =  Time.get_ticks_msec()
-			var dir = end-start
-			print(dir)
-			OS.delay_msec(max(simClockTime-dir,0))
+			#TimedExe(newSimBatch,"NextSim")
+			newSimBatch()
+			OS.delay_msec(max(simClockTime- (Time.get_ticks_msec()-start),0))
 		else:
+			simSemaphore.wait()
 			digestSimQueue()
-
+func newSimBatch():
+	simQueueMutex.lock()
+	simQueueSync = 0
+	simQueue = sections.keys().duplicate()
+	simQueueMutex.unlock()
+	if noSimThreads>1:
+		simSemaphore.post(noSimThreads-1) # 
+	digestSimQueue()
+	simQueueMutex.lock()
+	var count = simQueueSync
+	simQueueMutex.unlock()
+	while count < noSimThreads:
+		simQueueMutex.lock()
+		count = simQueueSync
+		simQueueMutex.unlock()
+	
+	
+#master (provider, ) is adding more to the queue quicker than the they are being processes, causing a number of sections to be simulating the exact same one and inducing a bunch of delay from the locks. 
 func digestSimQueue():
+	var pSec = get_relatives(pPos)["sec"]
 	while simQueue.size()>0:
 		if(simQueueMutex.try_lock()):
 			if simQueue.size()>0:
-				var pos = simQueue.pop_front()
-				
-				var start =  Time.get_ticks_msec()
+				var pos: Vector3i = simQueue.pop_front()
+				simQueueMutex.unlock()
 				var section : Section = sections[pos]
-				if section.updated == false:#lets wait for the section to be updated first.
+				if section.updated == false && pSec.distance_to(pos) <4:#lets wait for the section to be updated first.
+					#TimedExe(section.findAction, "finding actions for "+str(pos))
 					section.findAction()
-				var end =  Time.get_ticks_msec()
-				var dir = end-start
-				#print(str(OS.get_thread_caller_id())+" Tested "+str(pos)+ ", took "+ str(dir) +" ms to complete")
-			#else:
-				#print(str(OS.get_thread_caller_id())+" Tested  could not find a section in queue")
-			simQueueMutex.unlock()
-	#print(str(OS.get_thread_caller_id())+" finished for this cycle ")
+			else:
+				simQueueMutex.unlock()
+	
+	simQueueMutex.lock()
+	simQueueSync+=1
+	simQueueMutex.unlock()
 
-
+func TimedExe(callable: Callable, msg: String):
+	var start =  Time.get_ticks_msec()
+	callable.call()
+	var dir = Time.get_ticks_msec()-start
+	print(str(OS.get_thread_caller_id())+" "+ msg + ", took "+ str(dir) +" ms to complete")
 
 
 func prep():
@@ -122,8 +161,6 @@ func prep():
 		for z in worldSize.z:
 			var pos = Vector2i(-(worldSize.x/2)+x,-(worldSize.z/2)+z)
 			col(pos)
-	for s : Section in sections.values():
-		add_child(s)
 #util
 func getHeight(x,z) -> int:
 	var frequency = Vector2i(1,1)
@@ -168,7 +205,7 @@ func addAt(cord: Vector3i, val: int, mass: int) -> void:
 	var relative = get_relatives(cord)
 	var sec = getSec(relative['sec'])
 	if sec == null:
-		return
+		sec = addSection(relative['sec'])
 	return sec.addAt(relative["block"],val, mass)
 	
 	
@@ -191,32 +228,76 @@ func addHeatAt(cord: Vector3i, heat: int):
 	if sec == null:
 		return
 	return sec.addHeatAt(relative["block"],heat)
-
-#ref https://developer.mozilla.org/en-US/docs/Games/Techniques/3D_collision_detection
-func checkPresence(wPos: Vector3i)->bool:
-	if getVal(wPos)[0] != 0:
-		return true
-	for e:CharacterBody3D in entities:
-		var pos = e.position
-		var inx = (pos.x-0.18 <=((wPos.x+1)/blockSize)) && (pos.x+0.19 >= ((wPos.x)/blockSize))
-		var iny = (pos.y-0.8 <=((wPos.y+1)/blockSize)) && (pos.y+0.8 >= ((wPos.y)/blockSize))
-		var inz = (pos.z-0.18 <=((wPos.z+1)/blockSize)) && (pos.z+0.18 >= ((wPos.z)/blockSize))
-		if inx && iny && inz:
-			return true
-	return false
-
+func getHeatAt(cord: Vector3i, heat: int):
+	var relative = get_relatives(cord)
+	var sec = getSec(relative['sec'])
+	if sec == null:
+		return
+	return sec.getHeatAt(relative["block"])
 
 func col(pos:Vector2i) -> void:
 	for x in sectionSize.x:  #load all surface sections. 
 		for z in sectionSize.z:
 			var wCord = Vector3i(x,0,z) + (Vector3i(pos.x,0,pos.y)*sectionSize)
-			var height = 60#getHeight(wCord.x,wCord.z) ---------------------------------------------------------------
+			var height = getHeight(wCord.x,wCord.z)
 			var sh = height/sectionSize.y
 			var sec = Vector3i(pos.x,sh,pos.y)
-			if !sections.has(sec):
-				sections.merge({sec:Section.new(sec,sectionSize,blockSize, self, blockLib)})
+			addSection(sec)
 			var wh = 60/sectionSize.y
 			for i in (wh - sh)+1:
 				sec = Vector3i(pos.x,sh+i,pos.y)
-				if !sections.has(sec):
-					sections.merge({sec:Section.new(sec,sectionSize,blockSize, self, blockLib)})
+				addSection(sec)
+					
+func addSection(pos:Vector3i):
+	if !sections.has(pos):
+		var sec = Section.new(pos,sectionSize,blockSize, self, blockLib)
+		sections.merge({pos:sec})
+		newQueueMutex.lock()
+		newQueue.append(sec)
+		newQueueMutex.unlock()
+		return sec
+	return sections[pos]
+
+
+
+func scenePosToWorld(globalPos: Vector3) -> Vector3i:
+	return floor(globalPos*blockSize)
+		
+func getPosFromRayCol(pos, norm):
+	return scenePosToWorld(pos-(norm*(blockSize/2)))
+
+func hilight_block(cord: Vector3i, norm: Vector3i) -> void:
+	var relative = get_relatives(cord)
+	var section = getSec(relative['sec'])
+	if section == null:
+		return
+	section.hilightBlock(relative["block"], norm)
+	
+func unHilightBlock(cord: Vector3i) -> void:
+	var relative = get_relatives(cord)
+	var section = getSec(relative['sec'])
+	if section == null:
+		return
+	section.unHilightBlock()
+	
+	#ref https://developer.mozilla.org/en-US/docs/Games/Techniques/3D_collision_detection
+func checkPresence(cord: Vector3i)->bool:
+	if getVal(cord)[0] != 0:
+		return true
+	for e:EntityBase in entities:
+		if entityTouching(e,cord):
+			return true
+	return false
+
+#custom colisiton code Use this going forward, the shuffeling collisions will not work.
+func entityTouching(entity:EntityBase, cord: Vector3i) ->bool:
+	if getVal(cord)[0] == 0:
+		return false
+	var pos = entity.position
+	var scale = entity.size
+	var inx = (pos.x-(scale.x/2) <=((cord.x+1)/blockSize)) && (pos.x+(scale.x/2) >= ((cord.x)/blockSize))
+	var iny = (pos.y-(scale.y/2) <=((cord.y+1)/blockSize)) && (pos.y+(scale.y/2) >= ((cord.y)/blockSize))
+	var inz = (pos.z-(scale.z/2) <=((cord.z+1)/blockSize)) && (pos.z+(scale.z/2) >= ((cord.z)/blockSize))
+	if inx && iny && inz:
+		return true
+	return false
