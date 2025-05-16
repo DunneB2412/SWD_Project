@@ -1,7 +1,8 @@
-[gd_scene load_steps=8 format=3 uid="uid://c05ub2i700151"]
+[gd_scene load_steps=11 format=3 uid="uid://c05ub2i700151"]
 
+[ext_resource type="Material" uid="uid://cobsdxq1p3ot5" path="res://assets/crossairShader.tres" id="2_qlg0r"]
 [ext_resource type="Texture2D" uid="uid://bqp1bvxh20nm5" path="res://assets/crosshair161.png" id="2_xmgmu"]
-[ext_resource type="Script" uid="uid://f400o57meoxb" path="res://Scripts/gui/crossair.gd" id="3_yniyc"]
+[ext_resource type="Texture2D" uid="uid://daywycf25x16i" path="res://materials/test/TextureAtlasnlarger.png" id="3_qhqgy"]
 
 [sub_resource type="GDScript" id="GDScript_r2jjo"]
 script/source = "extends CharacterBody3D
@@ -19,7 +20,6 @@ class_name MyPlayer
 @onready var rich_text_label: RichTextLabel = $Boddy/Camera3D/RichTextLabel
 
 
-#@onready var grid_map: GridMap = $\"../GridMap\"
 
 const SPEED = 5.0
 const JUMP_VELOCITY = 4.6
@@ -153,13 +153,18 @@ margin = 0.0
 radius = 0.4
 height = 1.9
 
-[sub_resource type="CapsuleMesh" id="CapsuleMesh_3alwu"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_g2els"]
 
-[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_0swoi"]
-blend_mode = 2
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_3alwu"]
+material = SubResource("StandardMaterial3D_g2els")
 
 [sub_resource type="Theme" id="Theme_p4qux"]
 default_font_size = 20
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_dqkch"]
+
+[sub_resource type="QuadMesh" id="QuadMesh_qlg0r"]
+material = SubResource("StandardMaterial3D_dqkch")
 
 [node name="Player" type="CharacterBody3D"]
 script = SubResource("GDScript_r2jjo")
@@ -178,29 +183,44 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.779485, 0)
 [node name="RayCast3D" type="RayCast3D" parent="Boddy/Camera3D"]
 target_position = Vector3(0, 0, -5)
 
+[node name="TextureRect" type="TextureRect" parent="Boddy/Camera3D"]
+offset_left = 524.0
+offset_top = 301.0
+offset_right = 652.0
+offset_bottom = 365.0
+
 [node name="crossair" type="TextureRect" parent="Boddy/Camera3D"]
+visibility_layer = 2
+z_index = 1
+y_sort_enabled = true
+material = ExtResource("2_qlg0r")
 custom_minimum_size = Vector2(64, 64)
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -32.0
-offset_top = -32.0
-offset_right = 32.0
-offset_bottom = 32.0
+offset_left = -53.0
+offset_top = -25.0
+offset_right = 11.0
+offset_bottom = 39.0
 grow_horizontal = 2
 grow_vertical = 2
 pivot_offset = Vector2(32, 32)
 texture = ExtResource("2_xmgmu")
-script = ExtResource("3_yniyc")
 metadata/_edit_use_anchors_ = true
 
 [node name="RichTextLabel" type="RichTextLabel" parent="Boddy/Camera3D"]
-material = SubResource("CanvasItemMaterial_0swoi")
-offset_right = 521.0
-offset_bottom = 652.0
+offset_right = 500.0
+offset_bottom = 112.0
 theme = SubResource("Theme_p4qux")
 text = "test"
 fit_content = true
 scroll_active = false
+
+[node name="MeshInstance2D" type="MeshInstance2D" parent="Boddy/Camera3D"]
+texture_filter = 1
+position = Vector2(150, 149)
+scale = Vector2(100, 100)
+mesh = SubResource("QuadMesh_qlg0r")
+texture = ExtResource("3_qhqgy")

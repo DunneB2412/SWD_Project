@@ -1,0 +1,83 @@
+[gd_resource type="Resource" script_class="Mineral" load_steps=11 format=3 uid="uid://isojxdxq6hh1"]
+
+[ext_resource type="Script" uid="uid://dr6r178ahf0ds" path="res://Scripts/Mineral/Definations/MineralTexture.gd" id="2_c6h5s"]
+[ext_resource type="Script" uid="uid://d37lb6l4suonn" path="res://Scripts/Mineral/Definations/MineralHeatMap.gd" id="2_cxorm"]
+[ext_resource type="Script" uid="uid://bgknwn5va48b0" path="res://Scripts/Mineral/Definations/Mineral.gd" id="3_c6h5s"]
+[ext_resource type="Script" uid="uid://d4d2aj05ouj6a" path="res://Scripts/Mineral/Definations/BlockTextureMap.gd" id="3_rs1lf"]
+
+[sub_resource type="Resource" id="Resource_cxorm"]
+script = ExtResource("3_rs1lf")
+top = Vector2(4, 5)
+bottom = Vector2(4, 4)
+left = Vector2(5, 0)
+right = Vector2(5, 0)
+front = Vector2(5, 0)
+back = Vector2(5, 0)
+aplha = 1.0
+metadata/_custom_type_script = "uid://d4d2aj05ouj6a"
+
+[sub_resource type="Resource" id="Resource_c6h5s"]
+script = ExtResource("3_rs1lf")
+top = Vector2(4, 5)
+bottom = Vector2(4, 4)
+left = Vector2(5, 0)
+right = Vector2(5, 0)
+front = Vector2(5, 0)
+back = Vector2(5, 0)
+aplha = 1.0
+metadata/_custom_type_script = "uid://d4d2aj05ouj6a"
+
+[sub_resource type="Resource" id="Resource_cemkv"]
+script = ExtResource("3_rs1lf")
+top = Vector2(4, 5)
+bottom = Vector2(4, 4)
+left = Vector2(5, 0)
+right = Vector2(5, 0)
+front = Vector2(5, 0)
+back = Vector2(5, 0)
+aplha = 1.0
+metadata/_custom_type_script = "uid://d4d2aj05ouj6a"
+
+[sub_resource type="Resource" id="Resource_rs1lf"]
+script = ExtResource("2_c6h5s")
+solid = SubResource("Resource_cemkv")
+liquid = SubResource("Resource_c6h5s")
+gass = SubResource("Resource_cxorm")
+metadata/_custom_type_script = "uid://dr6r178ahf0ds"
+
+[sub_resource type="Resource" id="Resource_m4pe2"]
+script = ExtResource("2_cxorm")
+shpSolid = 1010.0
+shpPaste = 0.0
+shpLiquid = 1010.0
+shpGass = 1005.0
+lhpPaste = 0.0
+lhpLiquid = 1100.0
+lhpGass = 1200.0
+pcPaste = 0.0
+pcLiquid = 218.0
+pcGass = 183.0
+condsolid = 0.25
+condPaste = 0.25
+condLiquid = 0.25
+condGass = 0.25
+
+[sub_resource type="Resource" id="Resource_afu77"]
+script = ExtResource("2_c6h5s")
+solid = SubResource("Resource_cemkv")
+liquid = SubResource("Resource_c6h5s")
+gass = SubResource("Resource_cxorm")
+metadata/_custom_type_script = "uid://dr6r178ahf0ds"
+
+[resource]
+script = ExtResource("3_c6h5s")
+name = ""
+prim_texture = SubResource("Resource_afu77")
+aux_texture = SubResource("Resource_rs1lf")
+uses_paste_phase = false
+color = Color(0.882353, 0.141176, 0.223529, 1)
+heatCapacity = SubResource("Resource_m4pe2")
+normalDendity = 1.2
+hardness = 2
+clicable = false
+clickAction = Callable()

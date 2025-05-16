@@ -51,7 +51,7 @@ func _ready() -> void:
 	var pz = 0
 	var py = getHeight(px,pz)+4
 	pPos =  Vector3(px, py, pz)
-	player = Player.new(pPos,self,Vector3(0.8,0.8,0.8))
+	player = Player.new(pPos,self)#,Vector3(0.8,0.8,0.8))
 	
 	simQueueMutex = Mutex.new()
 	simSemaphore = Semaphore.new()
@@ -200,40 +200,54 @@ func getVal(cord: Vector3i) -> PackedInt64Array:
 	var sec = getSec(relative['sec'])
 	if sec == null:
 		return [0]
-	return sec.getVal(relative["block"])
+	return sec.getVal(relative["block"], Global.REF_VEC3)
 func addAt(cord: Vector3i, val: int, mass: int) -> void:
 	var relative = get_relatives(cord)
 	var sec = getSec(relative['sec'])
 	if sec == null:
-		sec = addSection(relative['sec'])
-	return sec.addAt(relative["block"],val, mass)
-	
-	
+		#sec = addSection(relative['sec'])
+		return
+	return sec.addAt(relative["block"],val, mass, Global.REF_VEC3)
+func break_block(cord: Vector3i) -> PackedInt64Array:
+	var val = getVal(cord)
+	for v in val:
+		var m = SectionData.readMeta(v,SectionData.INC.MASS)
+		addAt(cord,v,-m)
+	return val
+
+func ForceUpdate(cord: Vector3i):
+	var relative = get_relatives(cord)
+	var sec = getSec(relative['sec'])
+	if sec == null:
+		#sec = addSection(relative['sec'])
+		return
+	sec.genMesh()
+
 #temprature handelers
 func setTemp(cord: Vector3i, val:float):
 	var relative = get_relatives(cord)
 	var sec = getSec(relative['sec'])
 	if sec == null:
 		return
-	return sec.setTemp(relative["block"],val)
+	return sec.setTemp(relative["block"],val, Global.REF_VEC3)
 func getTemp(cord: Vector3i) -> float:
 	var relative = get_relatives(cord)
 	var sec = getSec(relative['sec'])
 	if sec == null:
 		return 0
-	return sec.getTemp(relative["block"])
+	return sec.getTemp(relative["block"], Global.REF_VEC3)
 func addHeatAt(cord: Vector3i, heat: int):
 	var relative = get_relatives(cord)
 	var sec = getSec(relative['sec'])
 	if sec == null:
 		return
-	return sec.addHeatAt(relative["block"],heat)
-func getHeatAt(cord: Vector3i, heat: int):
+	return sec.addHeatAt(relative["block"],heat, Global.REF_VEC3)
+func getHeatAt(cord: Vector3i):
 	var relative = get_relatives(cord)
 	var sec = getSec(relative['sec'])
 	if sec == null:
 		return
-	return sec.getHeatAt(relative["block"])
+	return sec.getHeatAt(relative["block"], Global.REF_VEC3)
 
 func col(pos:Vector2i) -> void:
 	for x in sectionSize.x:  #load all surface sections. 
@@ -265,39 +279,34 @@ func scenePosToWorld(globalPos: Vector3) -> Vector3i:
 		
 func getPosFromRayCol(pos, norm):
 	return scenePosToWorld(pos-(norm*(blockSize/2)))
-
-func hilight_block(cord: Vector3i, norm: Vector3i) -> void:
-	var relative = get_relatives(cord)
-	var section = getSec(relative['sec'])
-	if section == null:
-		return
-	section.hilightBlock(relative["block"], norm)
-	
-func unHilightBlock(cord: Vector3i) -> void:
-	var relative = get_relatives(cord)
-	var section = getSec(relative['sec'])
-	if section == null:
-		return
-	section.unHilightBlock()
-	
 	#ref https://developer.mozilla.org/en-US/docs/Games/Techniques/3D_collision_detection
 func checkPresence(cord: Vector3i)->bool:
 	if getVal(cord)[0] != 0:
 		return true
 	for e:EntityBase in entities:
-		if entityTouching(e,cord):
+		if entityTouching(e,cord)[0]:
 			return true
 	return false
 
 #custom colisiton code Use this going forward, the shuffeling collisions will not work.
-func entityTouching(entity:EntityBase, cord: Vector3i) ->bool:
+func entityTouching(entity:EntityBase, cord: Vector3i) ->Array:
+	var overlap = Vector3(0,0,0)
 	if getVal(cord)[0] == 0:
-		return false
+		return [false]
 	var pos = entity.position
 	var scale = entity.size
-	var inx = (pos.x-(scale.x/2) <=((cord.x+1)/blockSize)) && (pos.x+(scale.x/2) >= ((cord.x)/blockSize))
-	var iny = (pos.y-(scale.y/2) <=((cord.y+1)/blockSize)) && (pos.y+(scale.y/2) >= ((cord.y)/blockSize))
-	var inz = (pos.z-(scale.z/2) <=((cord.z+1)/blockSize)) && (pos.z+(scale.z/2) >= ((cord.z)/blockSize))
-	if inx && iny && inz:
-		return true
-	return false
+	for i in 3:
+		overlap[i] = max(
+			(((cord[i])/blockSize)-(pos[i]+(scale[i]/2)))* int((pos[i]+(scale[i]/2)) >= ((cord[i])/blockSize)),
+			((pos[i]-(scale[i]/2)) - ((cord[i]+1)/blockSize)) * int((pos[i]-(scale[i]/2) <=((cord[i]+1)/blockSize)))
+		)
+	if overlap.x !=0 && overlap.y !=0 && overlap.z !=0:
+		return [true,overlap]
+	return [false]
+
+func info(cord: Vector3i) -> String :
+	var relative = get_relatives(cord)
+	var sec = getSec(relative['sec'])
+	if sec == null:
+		return ""
+	return sec.info(cord)

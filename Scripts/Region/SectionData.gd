@@ -66,6 +66,8 @@ static func readMeta(val:int, property: INC) -> int :
 	
 static func kelToCel(kel: float):
 	return kel - 274.15
+static func celToCel(cel: float):
+	return cel + 274.15
 	
 static func masstoKG(mass:int) -> float:
 	return float(mass)/1000.0
@@ -114,6 +116,7 @@ func updateMassFor(pos: Vector3i, part: int, mass: int) -> int :
 	var m = min(mass,metaLim(INC.MASS)) #protect mass, 
 	var v = setMeta(part,INC.MASS,m)
 	var t = readMeta(part,INC.BLOCK_TYPE)
+	var p = readMeta(part,INC.PHASE)
 	
 	if !data.has(flat):
 		data.merge({flat:PackedInt64Array([v])}) #create a new one
@@ -123,7 +126,9 @@ func updateMassFor(pos: Vector3i, part: int, mass: int) -> int :
 	var cell: PackedInt64Array = data[flat]
 	#check if cell exists and update effective mass 'm'
 	for i in cell.size():
-		if i<cell.size() && readMeta(cell[i],INC.BLOCK_TYPE) == t:
+		var at = readMeta(cell[i],INC.BLOCK_TYPE)
+		var ap = readMeta(cell[i],INC.PHASE)
+		if at == t && ap == p:
 			v = cell[i]
 			var cm = readMeta(v, INC.MASS)
 			if (metaLim(INC.MASS)< cm + mass): #protect the sum, if the difference can't contain the new mass, use the dif as the change.
@@ -133,7 +138,7 @@ func updateMassFor(pos: Vector3i, part: int, mass: int) -> int :
 			m = cm+mass
 			v = setMeta(part,INC.MASS,m) #write to the val, the new mass.
 			cell.remove_at(i)
-			i = cell.size()+1#ski[p the rest
+			break
 			
 	if m > 0:
 		var inPos = cell.size()
@@ -141,7 +146,7 @@ func updateMassFor(pos: Vector3i, part: int, mass: int) -> int :
 			var mj = readMeta(cell[j],INC.MASS)
 			if m>mj:
 				inPos = j
-				j = cell.size()#skip to end now
+				break#skip to end now
 		cell.insert(inPos,v) # insert at found pos
 	else:
 		#if there is no mater left for this part, check if this empties the cell and clear.

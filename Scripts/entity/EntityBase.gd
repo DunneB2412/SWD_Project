@@ -6,11 +6,13 @@ const JUMP_VELOCITY = 4.5
 
 var envNode: Node3D
 var visualShape : Array[Section]
+var colisionShape: CollisionShape3D
 var region: Region
 var lastPos: Vector3i
 var entityId: int
 
 var size: Vector3
+var colisions: Vector3i
 
 func _init(pos: Vector3i, region_in: Region, scale_in: Vector3 = Vector3(0.9,1.8,0.9)) -> void:
 	lastPos = pos
@@ -33,6 +35,10 @@ func _init(pos: Vector3i, region_in: Region, scale_in: Vector3 = Vector3(0.9,1.8
 	visual.mesh = box
 	add_child(visual)
 	
+	colisionShape = CollisionShape3D.new()
+	colisionShape.shape = box.create_convex_shape()
+	add_child(colisionShape)
+	
 func _exit_tree() -> void:
 	envNode.queue_free()
 	
@@ -41,33 +47,28 @@ func _physics_process(delta: float) -> void:
 	for c in envNode.get_children():
 		c.queue_free()
 		
-	var pos = region.scenePosToWorld(self.position)
+	
 	#standard
 	grvity(delta)
 	jump()
 	walk()
 
-	moveNslide(delta)
-	#move_and_slide()
+	#moveNslide(1)
+	move_and_slide()
 
 
 func grvity(delta: float) -> void:
-	var res = checkGround()
-	velocity = (velocity+get_gravity() * delta) *(1-res)
+	if colisions.y != -1 || is_on_floor():
+		velocity = velocity+get_gravity() * delta
 
 func jump() -> void:
-	var res = checkGround()
-	if Input.is_action_pressed("jump") && res !=0:
-		velocity.y = max((velocity.y*(1-res))+JUMP_VELOCITY*res, JUMP_VELOCITY)
+	if Input.is_action_pressed("jump") && (colisions.y == -1 || is_on_floor()):
+		velocity.y = JUMP_VELOCITY
 
 func walk() -> void:
 	var speed = SPEED
 	if Input.is_action_pressed("sprint"):
 		speed*=2
-	#if godMode:
-		#speed*=1#0
-	# Get the input direction and handle the movement/deceleration.
-	# As good practice, you should replace UI actions with custom gameplay actions.
 	var input_dir := Input.get_vector("left", "right", "up", "down")
 	var direction := (self.transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
 	if direction:
@@ -76,91 +77,85 @@ func walk() -> void:
 	else:
 		velocity.x = move_toward(velocity.x, 0, speed)
 		velocity.z = move_toward(velocity.z, 0, speed)
-
-
-func checkGround() -> float:
-	var res = 0
-	var cord = region.scenePosToWorld(self.position - size/2)
+	
+	
+func checkDir(dir: Vector3i) -> PackedVector2Array:
+	var res: PackedVector2Array = []
+	res.resize(3)
 	var t = ceil(size)
-	for x in t.x+1:
-		for z in t.z+1:
-			if region.entityTouching(self, cord + Vector3i(x,0,z)):
-				#createColisionAt(cord + Vector3i(x,0,z))
-				var val = region.getVal(cord + Vector3i(x,0,z))
-				if SectionData.readMeta(val[0], SectionData.INC.BLOCK_TYPE) == 7:
-					res = max(res, 0.1)
-				else:
-					res = 1
-	
-	return res
-	
-	
-func checkDir(dir: Vector3i) -> Vector3:
-	var res = Vector3(0,0,0)
-	var t = ceil(size)
+	var cord = region.scenePosToWorld(self.position)
 	for i in 3: #cycle over vector
-		var d = dir[i]+ceil(size[i]/2)
-		
-		
-		for a in t[(i+1)%3]:
-			for b in t[(i+2)%3]:
-				var cellPos = Vector3i(0,0,0)
-				if dir[i] >0:
-					cellPos[i]=d-dir[i]
-				else:
-					cellPos[i]=d-ceil(size[i]/2)-dir[i]
-				cellPos[(i+1)%3]=a-ceil(size[(i+1)%3]/2)
-				cellPos[(i+2)%3]=b-ceil(size[(i+2)%3]/2)
+		if dir[i]!=0:
+			var d = dir[i]*ceil(size[i]/2)
+			res[i] = Vector2(0,0) #overlap in this direction. 
+			for a in t[(i+1)%3]+2:
+				for b in t[(i+2)%3]+2:
+					var celloffset = Vector3i(0,0,0)
+					celloffset[i]=d
+					celloffset[(i+1)%3]=a-ceil(size[(i+1)%3]/2)
+					celloffset[(i+2)%3]=b-ceil(size[(i+2)%3]/2)
+					var test = cord + celloffset
+					var c = Color.RED
+					var val = region.getVal(test)
+					var contact = region.entityTouching(self, test)
+					if contact[0]:
+						res[i].y = contact[1][i]
+						c = Color.PURPLE
+						var tolerance = region.blockSize/100
+						var minComb = size[i]+region.blockSize
+						for j in 2:
+							minComb = min(abs(snapped(contact[1][(i+(j+1))%3], tolerance)),minComb)
+						if tolerance < minComb: #only consider if over is within threshold
+							if SectionData.readMeta(val[0], SectionData.INC.BLOCK_TYPE) == 7:
+								res[i].x = max(res[i].x, 0.1)
+								c = Color.MIDNIGHT_BLUE
+							else:
+								c = Color.AQUAMARINE
+								res[i].x = 1
+					createColisionAt(test, c)
+					
 	return res
 
 func moveNslide(delta):
 	var change = velocity*delta
 	
 	if change != Vector3(Global.REF_VEC3):
-		print("Mobing entity by "+str(change)+ " this tick.")
-		
-		var ref = Vector3(Global.REF_VEC3)
-		
-		while change != ref:
-			#find least.
-			var minI = 0
-			var minDis = INF
-			var dir = 0
-			for i in 3:
-				var rsd = fmod(position[i],1.0)
-				if change[i] >0 && 1-rsd < minDis:
-					minDis = 1-rsd
-					minI = i
-					dir = 1
-				elif change[i] < 0 && rsd<minDis:
-					minDis = rsd
-					minI = i
-					dir = -1
-			var blkCheck = Vector3i(0,0,0)
-			blkCheck[minI] = dir
-			var step = min(change[minI],minDis)
-			change[minI] -= step
-			var val = region.getVal(region.scenePosToWorld(self.position)+blkCheck)
-			if val[0] != 0:
-				createColisionAt(region.scenePosToWorld(self.position)+blkCheck)
-				step = 0
+		#print("Mobing entity by "+str(change)+ " this tick.")
+		var tedt = Vector3i(0,0,0)
+		for i in 3:
+			if change[i] != 0:
+				if change[i] > 0:
+					tedt[i] = 1
+				else:
+					tedt[i] = -1
+		var resistance: PackedVector2Array = checkDir(tedt)
+		for i in 3:
+			change[i] = change[i]* (1-resistance[i].x)
+			if resistance[i].x != 0:
+				var reset = (resistance[i].y+region.blockSize/200) * tedt[i] #keep contact.
+				change[i] +=  reset*resistance[i].x
+				colisions[i] = tedt[i]
+			else:
+				colisions[i] = 0
 			
-			var next = Vector3(0,0,0)
-			next[minI] = step
-			
-			
-			position = position+next
-			var pPos = region.scenePosToWorld(self.position+((size/2)*dir))
-			if region.entityTouching(self, pPos):
-				print("hit wall at "+str(pPos))
-				
-				#block further moobment.
+		#position += change
 
-func createColisionAt(cell:Vector3i):
+func leastTransform(a:float,b:float) -> float:
+	if a <0:
+		return max(a,b)
+	else:
+		return min(a,b)
+
+func createColisionAt(cell:Vector3i, color: Color = Color.WHITE):
+	color.a = 0.5
 	var box = BoxMesh.new()
 	box.size = Vector3(1.01,1.01,1.01)* region.blockSize
+	var mat = StandardMaterial3D.new()
+	mat.albedo_color = color
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	box.material = mat
 	var visual = MeshInstance3D.new()
 	visual.mesh = box
-	visual.position = (cell*region.blockSize)+Vector3(0.505,0.505,0.505) 
+	visual.position = (cell*region.blockSize)+Vector3(0.5025,0.5025,0.5025) 
 	envNode.add_child(visual)
 	

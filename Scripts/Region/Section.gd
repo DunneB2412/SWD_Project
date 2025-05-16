@@ -68,11 +68,12 @@ func _process(_delta: float) -> void:
 	if nextMesh!= null:
 		#print(str(OS.get_thread_caller_id())+" locking "+ str(pos) +" data at proess ")
 		if(meshMutex.try_lock()):
+			for c in self.get_children():#remove any children if any.
+				c.queue_free()
 			self.mesh = nextMesh
+			self.create_trimesh_collision()
 			nextMesh = null
 			if debugContainer != null:
-				for c in self.get_children():#remove any children if any.
-					c.queue_free()
 				add_child(debugContainer)
 				debugContainer = null
 			meshMutex.unlock()
@@ -91,9 +92,9 @@ func loadSection() -> void:
 			if root != null:
 				height = root.getHeight(wCord.x,wCord.z) - (size.y*pos.y)
 				waterHeight = root.getWaterLine() - (size.y*pos.y)
-				height = waterHeight
-			if x == 4 and z == 4:
-				waterHeight += 4
+				#height = waterHeight
+			#if x == 4 and z == 4:
+				#waterHeight += 4
 			 
 			var soil = 2
 			if height - 3 < waterHeight:
@@ -147,15 +148,18 @@ func genMesh(colide = true) -> void:
 	dataMutex.lock()
 	var cells = data.get_filled_cells().duplicate()
 	dataMutex.unlock()
+	if cells.size() ==0:
+		return
+	
 	var visited: Array[Vector3i] = []
-	if cells.size()>0:
-		while cells.size()>0:
-			var c = cells.pop_front()
-			createBlock(c,ts,con,visited, cells)
+	while cells.size()>0:
+		var c = cells.pop_front()
+		createBlock(c,ts,con,visited, cells)
 		
 	ts.generate_normals(false)
 	meshMutex.lock()
 	nextMesh = ts.commit()
+	#nextMesh.create_trimesh_collision()
 	debugContainer = con
 	meshMutex.unlock()
 	updated = false
@@ -184,8 +188,8 @@ func createBlock(cord : Vector3i, surface: SurfaceTool, debcon: Node3D, visited:
 	#there are a bunch of flags that we do not need to encode in each min, only in cell.
 	#may not use var as mineral model dose nto require it.
 	#record on textuure if it should be notm aligned, world aligned or rotatable
-	var rot = data.readMeta(cell[0],INC.ROTATION)
-	var norm = data.readMeta(cell[0],INC.NORM)
+	var rot = SectionData.readMeta(cell[0],INC.ROTATION)
+	var norm = SectionData.readMeta(cell[0],INC.NORM)
 	
 	if true:
 		visited.append(cord)
@@ -197,8 +201,8 @@ func createBlock(cord : Vector3i, surface: SurfaceTool, debcon: Node3D, visited:
 				if getOverflow(nCord) == Global.REF_VEC3 && !visited.has(nCord) && !queue.has(nCord) :
 					queue.append(nCord)
 				if !(
-					(data.readMeta(altCell[0],INC.OPAQUE)) ||
-				 	(data.readMeta(cell[0],INC.BLOCK_TYPE) == data.readMeta(altCell[0],INC.BLOCK_TYPE))
+					(SectionData.readMeta(altCell[0],INC.OPAQUE)) ||
+				 	(SectionData.readMeta(cell[0],INC.BLOCK_TYPE) == SectionData.readMeta(altCell[0],INC.BLOCK_TYPE))
 					):
 					createFace(cord,dir, cell, rot, norm, surface, debcon)
 			else: #nothing was fopund so just make face.
@@ -207,9 +211,9 @@ func createBlock(cord : Vector3i, surface: SurfaceTool, debcon: Node3D, visited:
 func createFace(cord: Vector3i, dir :Global.DIR, cell: PackedInt64Array, rot: int, notm: int, st: SurfaceTool, debcon):
 	for i in cell.size():
 		var mineral = cell[i]
-		var t = data.readMeta(mineral, INC.BLOCK_TYPE)
-		var m = data.readMeta(mineral,INC.BLOCK_TYPE)
-		var phase = data.readMeta(mineral,INC.PHASE)
+		var t = SectionData.readMeta(mineral, INC.BLOCK_TYPE)
+		var m = SectionData.readMeta(mineral,INC.MASS)
+		var phase = SectionData.readMeta(mineral,INC.PHASE)
 		
 		var color = lib.blocks[t].mineral.color
 		color.a = (1.0/(i+1)) # * min(lib.blocks[blockT].mineral.normalDendity/ data.readMeta(min,INC.MASS),1)
@@ -220,7 +224,9 @@ func createFace(cord: Vector3i, dir :Global.DIR, cell: PackedInt64Array, rot: in
 			texture = lib.blocks[t].mineral.prim_texture.getPhase(phase).getTextures()[dir]
 		else:
 			texture = lib.blocks[t].mineral.aux_texture.getPhase(phase).getTextures()[dir]
-			
+		
+		if dir != notm:
+			rot = 0
 		addToFace(template.getFace(dir),template.vertices,template.Reset, st,cord,texture,color,rot)
 		
 	if debugMode :
@@ -233,13 +239,13 @@ func createFace(cord: Vector3i, dir :Global.DIR, cell: PackedInt64Array, rot: in
 		debcon.add_child(test)
 
 
-func info(pos: Vector3i) -> String :
-	var st = "temp " + str(snappedf(getTemp(pos),0.01)) +"\n"
-	var vals = getVal(pos)
+func info(cord: Vector3i) -> String :
+	var st = "temp " + str(snappedf(getTemp(cord),0.01)) +"\n"
+	var vals = getVal(cord)
 	st = st + "Has "+ str(vals.size()) +" mineral present\n"
 	var sum = 0
 	for v in vals:
-		sum += data.readMeta(v, INC.MASS)
+		sum +=  SectionData.readMeta(v, INC.MASS)
 	st = st + "containing " + str(sum) + "g of material"
 	return st
 
@@ -281,9 +287,11 @@ func getVal(cord: Vector3i, overflow: Vector3i = getOverflow(cord)) -> PackedInt
 func addAt(cord: Vector3i, val: int, mass: int, overflow: Vector3i = getOverflow(cord)) -> void:
 	if overflow == Global.REF_VEC3:
 		dataMutex.lock()
+		var prime = data.getVal(cord)[0]
 		data.updateMassFor(cord,val,mass)
+		var nprime = data.getVal(cord)[0]
 		dataMutex.unlock()
-		updated = true
+		updated = updated || prime != nprime
 		#if(root != null && root.has_method("updateChunk")):
 			#for d in Global.OFFSETS.values():
 				#if(checkBounds(cord+d)):
@@ -298,9 +306,9 @@ func initWith(cord:Vector3i, val: int):
 func avgHeatCapAt(cell: PackedInt64Array) -> float:
 	var sum = 0
 	for d in cell:
-		var type =data.readMeta(d,INC.BLOCK_TYPE)
-		var phase =  data.readMeta(d,INC.PHASE)
-		sum += data.masstoKG(data.readMeta(d,INC.MASS))*lib.blocks[type].mineral.heatCapacity.getShp(phase)
+		var type =SectionData.readMeta(d,INC.BLOCK_TYPE)
+		var phase =  SectionData.readMeta(d,INC.PHASE)
+		sum += SectionData.masstoKG(SectionData.readMeta(d,INC.MASS))*lib.blocks[type].mineral.heatCapacity.getShp(phase)
 	return sum/cell.size()
 
 func setTemp(cord: Vector3i, val:float, overflow: Vector3i = getOverflow(cord)):
@@ -349,7 +357,7 @@ func findAction():
 	var cells: Array = data.get_filled_cells()
 	for i in cells.size():
 		var pos = cells[i]
-		var cell = data.getVal(pos)
+		var cell = getVal(pos)
 		
 		for j in cell.size():
 			var part = cell[j]
@@ -362,9 +370,9 @@ func findAction():
 					#pass
 			
 func tempAct(cord:Vector3i, part: int):
-	var type = data.readMeta(part, INC.BLOCK_TYPE)
-	var phase = data.readMeta(part, INC.PHASE)
-	var mass = data.readMeta(part, INC.MASS)
+	var type = SectionData.readMeta(part, INC.BLOCK_TYPE)
+	var phase = SectionData.readMeta(part, INC.PHASE)
+	var mass = SectionData.readMeta(part, INC.MASS)
 	
 	var mineral = lib.blocks[type].mineral
 	
@@ -383,8 +391,30 @@ func tempAct(cord:Vector3i, part: int):
 		
 	#handle phase change.
 	var temp = getTemp(cord)
-	if temp > mineral.heatCapacity.getPCtemp(phase):
+	if phase < 2 && temp > mineral.heatCapacity.getPCtemp(phase):
 		var lhp = mineral.heatCapacity.getLhp(phase)
+		var alt = SectionData.setMeta(part,INC.PHASE, phase+1)
+		while temp > mineral.heatCapacity.getPCtemp(phase) && mass >0:
+			addHeatAt(cord, -lhp,Global.REF_VEC3)
+			addAt(cord,part,-1,Global.REF_VEC3)
+			mass -= 1 #take current phase
+			addAt(cord,alt,1,Global.REF_VEC3)
+			#add to next phase
+		
+	elif phase >1 && temp > mineral.heatCapacity.getPCtemp(phase-1):
+		var lhp = mineral.heatCapacity.getLhp(phase-1)
+		var alt = SectionData.setMeta(part,INC.PHASE, phase-1)
+		while temp > mineral.heatCapacity.getPCtemp(phase-1) && mass >0:
+			addHeatAt(cord, -lhp,Global.REF_VEC3)
+			addAt(cord,part,-1,Global.REF_VEC3)
+			mass -= 1 #take current phase
+			addAt(cord,alt,1,Global.REF_VEC3)
+			#add to next phase
+		
+	
+	
+	
+		
 		
 
 func fluidAct(cord:Vector3i, m: int):
@@ -394,7 +424,7 @@ func fluidAct(cord:Vector3i, m: int):
 
 
 	#try down 
-	var altdata = data.getVal(cord+Global.OFFSETS[Global.DIR.DOWN])[0] #we will only consider the primary
+	var altdata = getVal(cord+Global.OFFSETS[Global.DIR.DOWN])[0] #we will only consider the primary
 	var altp = SectionData.readMeta(altdata,INC.PHASE)
 	if altdata == 0 || altp > 0:
 		var altT = SectionData.readMeta(altdata, INC.BLOCK_TYPE)
@@ -435,7 +465,7 @@ func fluidAct(cord:Vector3i, m: int):
 	var suitable = [[Vector3i(0,0,0),mas,1]]
 	var sumM = mas
 	for dir in dirs:
-		altdata = data.getVal(cord+dir)[0] #we will only consider the primary
+		altdata = getVal(cord+dir)[0] #we will only consider the primary
 		altp = SectionData.readMeta(altdata,INC.PHASE)
 		if altdata == 0 || altp > 0:
 			var altT = SectionData.readMeta(altdata, INC.BLOCK_TYPE)
@@ -456,23 +486,23 @@ func fluidAct(cord:Vector3i, m: int):
 		addAt(e,m,dif)
 		
 	
-	mas = avgm
-	if mas> den:
-		altdata = data.getVal(cord+Global.OFFSETS[Global.DIR.UP])[0] #we will only consider the primary
-		altp = SectionData.readMeta(altdata,INC.PHASE)
-		if altdata == 0 || altp > 0:
-			var altT = SectionData.readMeta(altdata, INC.BLOCK_TYPE)
-			if altT != t:
-				var altd = lib.blocks[altT].mineral.normalDendity
-				if altd < den:
-					var dif = mas - den #send as much as naturally permited.
-					addAt(cord,m,-dif)
-					mas = mas - dif
-					addAt(cord+Global.OFFSETS[Global.DIR.UP],m,dif)
-					
-		else:
-			#permuable ?
-			pass
+	#mas = avgm
+	#if mas> den:
+		#altdata = data.getVal(cord+Global.OFFSETS[Global.DIR.UP])[0] #we will only consider the primary
+		#altp = SectionData.readMeta(altdata,INC.PHASE)
+		#if altdata == 0 || altp > 0:
+			#var altT = SectionData.readMeta(altdata, INC.BLOCK_TYPE)
+			#if altT != t:
+				#var altd = lib.blocks[altT].mineral.normalDendity
+				#if altd < den:
+					#var dif = mas - den #send as much as naturally permited.
+					#addAt(cord,m,-dif)
+					#mas = mas - dif
+					#addAt(cord+Global.OFFSETS[Global.DIR.UP],m,dif)
+					#
+		#else:
+			##permuable ?
+			#pass
 		
 
 #func checkFlow(cord:Vector3i,dir:Global.DIR,t:int,den:int,mas:int ):
