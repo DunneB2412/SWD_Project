@@ -8,7 +8,7 @@ void vertex() {
 void fragment() {
 	//COLOR.rgb = 1.0 - textureLod(SCREEN_TEXTURE, SCREEN_UV, 0.0).rgb;
 	//COLOR.a = texture(TEXTURE , UV).a;
-	
+
 	vec4 tex_color = texture(TEXTURE, UV);
 
 	if (tex_color.a > 0.0) {

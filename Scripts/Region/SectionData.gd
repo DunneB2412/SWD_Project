@@ -66,7 +66,7 @@ static func readMeta(val:int, property: INC) -> int :
 	
 static func kelToCel(kel: float):
 	return kel - 274.15
-static func celToCel(cel: float):
+static func celToKel(cel: float):
 	return cel + 274.15
 	
 static func masstoKG(mass:int) -> float:
@@ -168,7 +168,9 @@ func addHeatAt(pos:Vector3i,j:int) -> void:
 	var flat = flattenCord(pos)
 	if !(data.has(flat) && heatE.has(flat)):
 		return #no temprature in a vaccume
-	heatE[flat] += j
+	var t = heatE[flat]
+	var r = t + j
+	heatE[flat] = r
 	
 func flattenCord(pos: Vector3i) -> int:
 	return (pos.x*size.y*size.z) + (pos.y*size.z) + pos.z

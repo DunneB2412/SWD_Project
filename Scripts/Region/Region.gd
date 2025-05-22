@@ -57,7 +57,7 @@ func _ready() -> void:
 	simSemaphore = Semaphore.new()
 	for i in noSimThreads:
 		var t = Thread.new()
-		t.start(_sim)
+		#t.start(_sim)
 		simThreads.append(t)
 	print_tree_pretty()
 	
@@ -65,6 +65,8 @@ func _exit_tree() -> void:
 	run = false
 	if meshThread.is_started():
 		meshThread.wait_to_finish()
+	if noSimThreads>1:
+		simSemaphore.post(noSimThreads-1) # 
 	for t in simThreads:
 		if t.is_started():
 			t.wait_to_finish()
@@ -107,47 +109,50 @@ func _sim():
 	while run:
 		if OS.get_thread_caller_id() == masterSimThread:
 			var start =  Time.get_ticks_msec()
-			#TimedExe(newSimBatch,"NextSim")
-			newSimBatch()
+			TimedExe(newSimBatch,"NextSim")
+			#newSimBatch()
 			OS.delay_msec(max(simClockTime- (Time.get_ticks_msec()-start),0))
 		else:
 			simSemaphore.wait()
 			digestSimQueue()
 func newSimBatch():
-	simQueueMutex.lock()
-	simQueueSync = 0
-	simQueue = sections.keys().duplicate()
-	simQueueMutex.unlock()
-	if noSimThreads>1:
-		simSemaphore.post(noSimThreads-1) # 
-	digestSimQueue()
-	simQueueMutex.lock()
-	var count = simQueueSync
-	simQueueMutex.unlock()
-	while count < noSimThreads:
+	if run:
 		simQueueMutex.lock()
-		count = simQueueSync
+		simQueueSync = 0
+		simQueue = sections.keys().duplicate()
 		simQueueMutex.unlock()
+		if noSimThreads>1:
+			simSemaphore.post(noSimThreads-1) # 
+		digestSimQueue()
+		simQueueMutex.lock()
+		var count = simQueueSync
+		simQueueMutex.unlock()
+		while count < noSimThreads:
+			simQueueMutex.lock()
+			count = simQueueSync
+			simQueueMutex.unlock()
 	
 	
 #master (provider, ) is adding more to the queue quicker than the they are being processes, causing a number of sections to be simulating the exact same one and inducing a bunch of delay from the locks. 
 func digestSimQueue():
+	print(str(OS.get_thread_caller_id())+":: start")
 	var pSec = get_relatives(pPos)["sec"]
-	while simQueue.size()>0:
+	while simQueue.size()>0 && run:
 		if(simQueueMutex.try_lock()):
 			if simQueue.size()>0:
 				var pos: Vector3i = simQueue.pop_front()
 				simQueueMutex.unlock()
 				var section : Section = sections[pos]
-				if section.updated == false && pSec.distance_to(pos) <4:#lets wait for the section to be updated first.
-					#TimedExe(section.findAction, "finding actions for "+str(pos))
-					section.findAction()
+				if section.updated == false && pSec.distance_to(pos) <2:#lets wait for the section to be updated first.
+					TimedExe(section.findAction, "finding actions for "+str(pos))
+					#section.findAction()
 			else:
 				simQueueMutex.unlock()
 	
 	simQueueMutex.lock()
 	simQueueSync+=1
 	simQueueMutex.unlock()
+	print(str(OS.get_thread_caller_id())+":: end")
 
 func TimedExe(callable: Callable, msg: String):
 	var start =  Time.get_ticks_msec()
@@ -199,20 +204,20 @@ func getVal(cord: Vector3i) -> PackedInt64Array:
 	var relative = get_relatives(cord)
 	var sec = getSec(relative['sec'])
 	if sec == null:
-		return [0]
+		return [-1]
 	return sec.getVal(relative["block"], Global.REF_VEC3)
-func addAt(cord: Vector3i, val: int, mass: int) -> void:
+func addAt(cord: Vector3i, val: int, mass: int, temp: float) -> void:
 	var relative = get_relatives(cord)
 	var sec = getSec(relative['sec'])
 	if sec == null:
 		#sec = addSection(relative['sec'])
 		return
-	return sec.addAt(relative["block"],val, mass, Global.REF_VEC3)
+	return sec.addAt(relative["block"],val, mass, temp, Global.REF_VEC3)
 func break_block(cord: Vector3i) -> PackedInt64Array:
 	var val = getVal(cord)
 	for v in val:
 		var m = SectionData.readMeta(v,SectionData.INC.MASS)
-		addAt(cord,v,-m)
+		addAt(cord,v,-m,0)
 	return val
 
 func ForceUpdate(cord: Vector3i):
@@ -222,6 +227,12 @@ func ForceUpdate(cord: Vector3i):
 		#sec = addSection(relative['sec'])
 		return
 	sec.genMesh()
+func updateChunk(cord: Vector3i):
+	var relative = get_relatives(cord)
+	var sec = getSec(relative['sec'])
+	if sec == null:
+		return
+	sec.updated = true
 
 #temprature handelers
 func setTemp(cord: Vector3i, val:float):
@@ -309,4 +320,53 @@ func info(cord: Vector3i) -> String :
 	var sec = getSec(relative['sec'])
 	if sec == null:
 		return ""
-	return sec.info(cord)
+	return sec.info(relative["block"])
+	
+	
+	
+func _threadProcess():
+	var oldPlayerChunk = get_relatives(pPos)["chunk"]
+	if(true):
+		var playerChunk: Vector3i  = get_relatives(pPos)["chunk"]
+		if playerChunk != oldPlayerChunk || true:
+			oldPlayerChunk = playerChunk
+			#for pos in sections:
+				#var val = sections[pos]
+				#val["life"]-=1
+				#if val["life"] <=0:
+					#if !destroyQueue.has(pos):
+						#destroyQueue.append(pos)
+			
+			#var loaders = []
+			
+			var queue = [Vector3i(0,0,0)]
+			var visited = []
+			while !queue.is_empty():
+				var vec = queue.pop_front()
+				playerChunk = get_relatives(pPos)["chunk"]
+				#if the vector is within the render distance.
+				if(playerChunk.distance_to(vec)<32):
+					
+					var ox = playerChunk.x + vec.x 
+					var oz = playerChunk.z + vec.z
+					var wx = (ox*sectionSize.x) + (sectionSize.x>>1) # sample thge midle
+					var wz = (oz*sectionSize.z) + (sectionSize.z>>1)
+					var wy = getHeight(wx,wz)
+					var oy = floor(wy/sectionSize.y) + vec.y
+					var cPos = Vector3i(ox,oy,oz)
+					addSection(cPos)
+					visited.append(vec)
+					var next = [
+						Vector3i(bounce(vec.x),vec.y,vec.z),
+						Vector3i(vec.x,vec.y,bounce(vec.z)),
+						Vector3i(bounce(vec.x),vec.y,bounce(vec.z)),
+						Vector3i(vec.x,bounce(vec.y),vec.z)
+					]
+					for v in next:
+						if !visited.has(v) && !queue.has(v):	
+							queue.push_back(v)
+					
+		await get_tree().create_timer(0.01).timeout
+
+func bounce(i: int) -> int:
+	return ~i + int(i<0)

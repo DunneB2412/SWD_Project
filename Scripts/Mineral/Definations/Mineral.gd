@@ -19,6 +19,10 @@ static func check():
 @export var alchemic: AlchemicMap
 
 
+
+
+
+
 #have a primary and seccondary texture.
 #all blocks will have a primary, where the majority of the material is one mineral.
 # water will have a primary with the standard liquid and a secondary of darkening when liquid ans brightening when solid.

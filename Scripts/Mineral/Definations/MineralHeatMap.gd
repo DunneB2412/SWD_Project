@@ -21,7 +21,7 @@ class_name MineralHeatMap
 @export var condGass: float = 0.25
  
 func getShp(phase:int):
-	return [shpSolid,shpLiquid,shpGass,shpSolid][phase]
+	return [shpSolid,shpLiquid,shpGass,shpPaste][phase]
 func getLhp(phase:int):
 	return [lhpLiquid,lhpGass,lhpPaste][phase]
 func getPCtemp(phase:int):

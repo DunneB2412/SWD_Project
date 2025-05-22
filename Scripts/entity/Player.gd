@@ -1,4 +1,3 @@
-@tool
 extends  EntityBase
 class_name Player
 
@@ -40,6 +39,7 @@ func _ready() -> void:
 	debugText.theme.default_font_size = 20
 	debugText.size = Vector2(500,500)
 	debugText.visible = true
+	debugText.position = Vector2(30,30)
 	
 	ray = RayCast3D.new()
 	ray.target_position = Vector3i(0,0,-5)
@@ -66,8 +66,8 @@ func _ready() -> void:
 	Hotbar.position = Vector2(-300,-80)
 	Hotbar.max_columns = 10
 	var size = Vector2(16,16)
-	for i in region.blockLib.blocks.size():
-		var mineral = region.blockLib.blocks[i].mineral
+	for i in region.blockLib.blocks.size()-1:
+		var mineral = region.blockLib.blocks[i+1].mineral
 		var texture = AtlasTexture.new()
 		texture.atlas= region.blockLib.material.albedo_texture
 		texture.region = Rect2((mineral.prim_texture.getPhase(0).front)*size,size)
@@ -106,6 +106,9 @@ func _physics_process(delta: float) -> void:
 	ray_cast()
 	numbSellect()
 	
+	if Input.is_action_just_pressed("scrClk"):
+		region.queue_free()
+	
 	super._physics_process(delta)
 
 func ray_cast()-> void:
@@ -136,8 +139,10 @@ func world_clicks(pos,norm):
 			region.break_block(focous)
 			region.ForceUpdate(focous)
 		if Input.is_action_just_pressed("rightMouse"):
-			region.addAt(focous+Vector3i(fnorm),item,50)
-			region.setTemp(focous+Vector3i(fnorm), SectionData.celToCel(30))#around body temprature
+			if Input.is_action_pressed("Alt"):
+				region.addAt(focous,item,50,SectionData.celToKel(30))
+			else:
+				region.addAt(focous+Vector3i(fnorm),item,50,SectionData.celToKel(30))
 			region.ForceUpdate(focous)
 	
 
@@ -226,5 +231,5 @@ func numbSellect():
 	for i in 10:
 		var e = str((i+1)%10)
 		if Input.is_action_just_pressed(e):
-			item = i
+			item = i+1
 			Hotbar.select(i)
