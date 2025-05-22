@@ -96,12 +96,16 @@ func loadSection() -> void:
 			#if x == 4 and z == 4:
 				#waterHeight += 4
 			 
+			
+			
 			var soil = 2
 			if height - 3 < waterHeight:
 				soil = 8
 			
 			var dd = 3
 			for y in size.y: 
+				#if (x+z+y)%2 == 0:
+					#initWith(Vector3i(x,y,z),1,10)
 				var b = 0
 				if y <= waterHeight && y > height:
 					b = 7
@@ -117,6 +121,8 @@ func loadSection() -> void:
 					v = SectionData.setMeta(v, INC.ROTATION, randi_range(0,SectionData.metaLim(INC.ROTATION)))
 					#b = SectionData.setMeta(b,INC.NORM, randi_range(0,SectionData.metaLim(INC.NORM)))
 					var temp = SectionData.celToKel(120- ((size.y*pos.y)+y))
+					
+					
 					initWith(Vector3i(x,y,z),v,temp)
 					if y == height && b == 2:
 						addAt(Vector3i(x,y,z),3,5,temp)
@@ -313,8 +319,6 @@ func addAt(cord: Vector3i, val: int, mass: int, temp: float, overflow: Vector3i 
 			for d in Global.OFFSETS.values():
 				if(getOverflow(cord+d) != Global.REF_VEC3):
 					root.updateChunk((size*pos)+d+cord)
-		var test = getTemp(cord, overflow)
-		print(test)
 	elif root != null && root.has_method("addAt"):
 		var bind: Vector3i = Vector3i(posmod(cord.x, size.x),posmod(cord.y, size.y),posmod(cord.z, size.z))
 		root.addAt((((overflow+pos)*size)+bind),val,mass,temp)
@@ -400,18 +404,19 @@ func tempAct(cord:Vector3i, part: int):
 	
 	var mineral = lib.blocks[type].mineral
 	
-	var sum = getTemp(cord)
-	var suitable = [[Global.REF_VEC3,sum, mineral.heatCapacity.getCond(phase)]]
-	for offset in Global.OFFSETS.values():
-		if getVal(cord+offset)[0] > 0:
-			var temp = getTemp(cord+offset)
-			suitable.append([offset,temp, mineral.heatCapacity.getCond(phase)])
-			sum+= temp
-	var avg = sum/suitable.size()
-	for o in suitable:
-		var ncord = cord+o[0]
-		var dif = (avg-o[1])*o[2]
-		addHeatAt(ncord,dif)
+	if (cord.x+cord.y+cord.z)%2==0:
+		var sum = getTemp(cord)
+		var suitable = [[Global.REF_VEC3,sum, mineral.heatCapacity.getCond(phase)]]
+		for offset in Global.OFFSETS.values():
+			if getVal(cord+offset)[0] > 0:
+				var temp = getTemp(cord+offset)
+				suitable.append([offset,temp, mineral.heatCapacity.getCond(phase)])
+				sum+= temp
+		var avg = sum/suitable.size()
+		for o in suitable:
+			var ncord = cord+o[0]
+			var dif = (avg-o[1])*o[2]
+			addHeatAt(ncord,dif)
 		
 	#handle phase change. TODO make more efficiant this is to expensive.
 	var temp = getTemp(cord)
@@ -459,7 +464,7 @@ func fluidAct(cord:Vector3i, m: int):
 		var altT = SectionData.readMeta(altdata, INC.BLOCK_TYPE)
 		if altT == t:
 			var altM = SectionData.readMeta(altdata, INC.MASS)
-			var avg = altM+mas/2
+			var avg = (altM+mas)/2
 			if avg > den:
 				addAt(cord,m,avg-mas,temp)
 				addAt(cord+Global.OFFSETS[Global.DIR.DOWN],m,avg-altM,temp)
@@ -484,6 +489,9 @@ func fluidAct(cord:Vector3i, m: int):
 		#permuable ?
 		pass
 
+
+	if (cord.x+cord.y+cord.z)%2!=0: #che3cker pattorn check
+		return
 	if mas<5: #don't split if there is not enough TODO should depend on viscosity of liquid. 
 		addAt(cord,m,-mas,0)
 		return
@@ -492,8 +500,8 @@ func fluidAct(cord:Vector3i, m: int):
 		Global.OFFSETS[Global.DIR.SOUTH],Global.OFFSETS[Global.DIR.NORTH],
 		Global.OFFSETS[Global.DIR.EAST],Global.OFFSETS[Global.DIR.WEST]
 	]
-	var suitable = [[Vector3i(0,0,0),mas,1]]
-	var sumM = mas
+	var suitable = []
+	var sumM = 0
 	for dir in dirs:
 		altdata = getVal(cord+dir)[0] #we will only consider the primary
 		altp = SectionData.readMeta(altdata,INC.PHASE)
@@ -501,20 +509,23 @@ func fluidAct(cord:Vector3i, m: int):
 			var altT = SectionData.readMeta(altdata, INC.BLOCK_TYPE)
 			var altd = lib.blocks[SectionData.readMeta(altdata, INC.BLOCK_TYPE)].mineral.normalDendity
 			if altd < den:
-				suitable.append([dir,0,1])
+				suitable.append([dir,0,0.75])
 			elif altT == t:
 				var altM = SectionData.readMeta(altdata, INC.MASS)
-				suitable.append([dir,altM,1])
+				suitable.append([dir,altM,0.75])
+				#TODO, use viscosity
 				sumM += altM
 		else:
 			pass #solid permit
 	
 	
-	var avgm = sumM / suitable.size()
+	var avgm = (sumM+mas) / (suitable.size()+1)
 	for o in suitable:
 		var e = cord+o[0]
-		var dif = (avgm-o[1])*o[2]
-		addAt(e,m,dif, temp)
+		var dif =(avgm-o[1])/suitable.size()
+		var move = dif*o[2]
+		addAt(e,m,floor(move), temp)
+		addAt(cord,m,-floor(move),temp)
 		
 	
 	#mas = avgm

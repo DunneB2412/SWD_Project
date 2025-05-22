@@ -57,7 +57,7 @@ func _ready() -> void:
 	simSemaphore = Semaphore.new()
 	for i in noSimThreads:
 		var t = Thread.new()
-		#t.start(_sim)
+		t.start(_sim)
 		simThreads.append(t)
 	print_tree_pretty()
 	
