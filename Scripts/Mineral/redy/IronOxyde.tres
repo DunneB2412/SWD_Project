@@ -1,9 +1,14 @@
-[gd_resource type="Resource" script_class="Mineral" load_steps=6 format=3 uid="uid://biktou365hdax"]
+[gd_resource type="Resource" script_class="Mineral" load_steps=8 format=3 uid="uid://biktou365hdax"]
 
+[ext_resource type="Script" uid="uid://dbhp4wji4ci8e" path="res://Scripts/Mineral/Definations/alchemic/ironOre.gd" id="1_nm065"]
 [ext_resource type="Resource" uid="uid://bx6ycftlht65n" path="res://Scripts/Mineral/common/mineral_textures/metalOre.tres" id="1_rc5m0"]
 [ext_resource type="Script" uid="uid://d37lb6l4suonn" path="res://Scripts/Mineral/Definations/MineralHeatMap.gd" id="2_w2lah"]
 [ext_resource type="Resource" uid="uid://bugynda8tfris" path="res://Scripts/Mineral/common/mineral_textures/Metal.tres" id="3_hfhrh"]
 [ext_resource type="Script" uid="uid://bgknwn5va48b0" path="res://Scripts/Mineral/Definations/Mineral.gd" id="4_5eqgo"]
+
+[sub_resource type="Resource" id="Resource_u5afn"]
+script = ExtResource("1_nm065")
+metadata/_custom_type_script = "uid://dbhp4wji4ci8e"
 
 [sub_resource type="Resource" id="Resource_o27hr"]
 script = ExtResource("2_w2lah")
@@ -32,5 +37,6 @@ color = Color(0.519855, 0.174758, 0.0671994, 1)
 heatCapacity = SubResource("Resource_o27hr")
 normalDendity = 7874.0
 hardness = 8
-clicable = false
+clicable = true
 clickAction = Callable()
+alchemic = SubResource("Resource_u5afn")

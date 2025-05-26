@@ -18,6 +18,7 @@ var player: Player
 @export var blockLib: BlockLib
 @export var noSimThreads: int = 8
 @export var simClockTime: int = 1000
+@export var simRange: int = 8
 
 var simThreads: Array[Thread]
 var masterSimThread: int
@@ -135,7 +136,7 @@ func newSimBatch():
 	
 #master (provider, ) is adding more to the queue quicker than the they are being processes, causing a number of sections to be simulating the exact same one and inducing a bunch of delay from the locks. 
 func digestSimQueue():
-	print(str(OS.get_thread_caller_id())+":: start")
+	#print(str(OS.get_thread_caller_id())+":: start")
 	var pSec = get_relatives(pPos)["sec"]
 	while simQueue.size()>0 && run:
 		if(simQueueMutex.try_lock()):
@@ -143,16 +144,16 @@ func digestSimQueue():
 				var pos: Vector3i = simQueue.pop_front()
 				simQueueMutex.unlock()
 				var section : Section = sections[pos]
-				if section.updated == false && pSec.distance_to(pos) <2:#lets wait for the section to be updated first.
-					TimedExe(section.findAction, "finding actions for "+str(pos))
-					#section.findAction()
+				if section.updated == false && pSec.distance_to(pos) <simRange:#lets wait for the section to be updated first.
+					#TimedExe(section.findAction, "finding actions for "+str(pos))
+					section.findAction()
 			else:
 				simQueueMutex.unlock()
 	
 	simQueueMutex.lock()
 	simQueueSync+=1
 	simQueueMutex.unlock()
-	print(str(OS.get_thread_caller_id())+":: end")
+	#print(str(OS.get_thread_caller_id())+":: end")
 
 func TimedExe(callable: Callable, msg: String):
 	var start =  Time.get_ticks_msec()
@@ -206,12 +207,12 @@ func getVal(cord: Vector3i) -> PackedInt64Array:
 	if sec == null:
 		return [-1]
 	return sec.getVal(relative["block"], Global.REF_VEC3)
-func addAt(cord: Vector3i, val: int, mass: int, temp: float) -> void:
+func addAt(cord: Vector3i, val: int, mass: int, temp: float) -> int:
 	var relative = get_relatives(cord)
 	var sec = getSec(relative['sec'])
 	if sec == null:
 		#sec = addSection(relative['sec'])
-		return
+		return 0
 	return sec.addAt(relative["block"],val, mass, temp, Global.REF_VEC3)
 func break_block(cord: Vector3i) -> PackedInt64Array:
 	var val = getVal(cord)
@@ -261,17 +262,23 @@ func getHeatAt(cord: Vector3i):
 	return sec.getHeatAt(relative["block"], Global.REF_VEC3)
 
 func col(pos:Vector2i) -> void:
+	var miny = INF
+	var maxy = getWaterLine()/sectionSize.y
 	for x in sectionSize.x:  #load all surface sections. 
 		for z in sectionSize.z:
 			var wCord = Vector3i(x,0,z) + (Vector3i(pos.x,0,pos.y)*sectionSize)
 			var height = getHeight(wCord.x,wCord.z)
 			var sh = height/sectionSize.y
-			var sec = Vector3i(pos.x,sh,pos.y)
-			addSection(sec)
-			var wh = 60/sectionSize.y
-			for i in (wh - sh)+1:
-				sec = Vector3i(pos.x,sh+i,pos.y)
-				addSection(sec)
+			if sh < miny:
+				miny = sh
+			elif sh > maxy:
+				maxy = sh
+		
+	miny -= floor(worldSize.y/2.0)
+	maxy += ceil(worldSize.y/2.0)
+	for i in maxy-miny:
+		var sec = Vector3i(pos.x,i + miny,pos.y)
+		addSection(sec)
 					
 func addSection(pos:Vector3i):
 	if !sections.has(pos):

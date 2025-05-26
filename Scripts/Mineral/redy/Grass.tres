@@ -1,11 +1,16 @@
-[gd_resource type="Resource" script_class="Mineral" load_steps=11 format=3 uid="uid://djqsjneorge8d"]
+[gd_resource type="Resource" script_class="Mineral" load_steps=13 format=3 uid="uid://djqsjneorge8d"]
 
+[ext_resource type="Script" uid="uid://6jcpslkmpw8o" path="res://Scripts/Mineral/Definations/alchemic/Grass.gd" id="1_0d7ow"]
 [ext_resource type="Resource" uid="uid://2oqb586wk22i" path="res://Scripts/Mineral/common/HeatMaps/dirt.tres" id="1_cdo0w"]
 [ext_resource type="Script" uid="uid://bgknwn5va48b0" path="res://Scripts/Mineral/Definations/Mineral.gd" id="3_wqsdu"]
 [ext_resource type="Resource" uid="uid://6gcwk4a4iltc" path="res://Scripts/Mineral/common/Gass.tres" id="4_3cb4i"]
 [ext_resource type="Resource" uid="uid://dv6ole473sjoa" path="res://Scripts/Mineral/common/Liquid.tres" id="5_ek36l"]
 [ext_resource type="Script" uid="uid://dr6r178ahf0ds" path="res://Scripts/Mineral/Definations/MineralTexture.gd" id="6_soa6d"]
 [ext_resource type="Script" uid="uid://d4d2aj05ouj6a" path="res://Scripts/Mineral/Definations/BlockTextureMap.gd" id="7_bfhpq"]
+
+[sub_resource type="Resource" id="Resource_57w1r"]
+script = ExtResource("1_0d7ow")
+metadata/_custom_type_script = "uid://6jcpslkmpw8o"
 
 [sub_resource type="Resource" id="Resource_yvn8o"]
 script = ExtResource("7_bfhpq")
@@ -51,3 +56,4 @@ normalDendity = 1255.0
 hardness = 3
 clicable = false
 clickAction = Callable()
+alchemic = SubResource("Resource_57w1r")

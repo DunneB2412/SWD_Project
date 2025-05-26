@@ -1,5 +1,6 @@
 [gd_resource type="Resource" script_class="Mineral" load_steps=12 format=3 uid="uid://cc0ra48ypmxmy"]
 
+[ext_resource type="Resource" uid="uid://baya3u5b0l725" path="res://Scripts/Mineral/common/mineral_textures/Aux2.tres" id="1_bhg06"]
 [ext_resource type="Script" uid="uid://d37lb6l4suonn" path="res://Scripts/Mineral/Definations/MineralHeatMap.gd" id="1_unsee"]
 [ext_resource type="Script" uid="uid://bgknwn5va48b0" path="res://Scripts/Mineral/Definations/Mineral.gd" id="3_1ob37"]
 [ext_resource type="Resource" uid="uid://dxfsx02ei0ixi" path="res://Scripts/Mineral/common/Lava.tres" id="3_klysw"]
@@ -7,23 +8,6 @@
 [ext_resource type="Resource" uid="uid://dv6ole473sjoa" path="res://Scripts/Mineral/common/Liquid.tres" id="5_2kxkj"]
 [ext_resource type="Script" uid="uid://dr6r178ahf0ds" path="res://Scripts/Mineral/Definations/MineralTexture.gd" id="6_w3qtq"]
 [ext_resource type="Script" uid="uid://d4d2aj05ouj6a" path="res://Scripts/Mineral/Definations/BlockTextureMap.gd" id="7_urlgw"]
-
-[sub_resource type="Resource" id="Resource_f52ex"]
-script = ExtResource("7_urlgw")
-top = Vector2(7, 1)
-bottom = Vector2(7, 1)
-left = Vector2(7, 1)
-right = Vector2(7, 1)
-front = Vector2(7, 1)
-back = Vector2(7, 1)
-aplha = 1.0
-
-[sub_resource type="Resource" id="Resource_4xovo"]
-script = ExtResource("6_w3qtq")
-solid = SubResource("Resource_f52ex")
-paste = ExtResource("3_klysw")
-liquid = ExtResource("5_2kxkj")
-gass = ExtResource("4_3av1b")
 
 [sub_resource type="Resource" id="Resource_4bgb2"]
 script = ExtResource("1_unsee")
@@ -42,6 +26,16 @@ condPaste = 0.25
 condLiquid = 0.25
 condGass = 0.25
 
+[sub_resource type="Resource" id="Resource_f52ex"]
+script = ExtResource("7_urlgw")
+top = Vector2(7, 1)
+bottom = Vector2(7, 1)
+left = Vector2(7, 1)
+right = Vector2(7, 1)
+front = Vector2(7, 1)
+back = Vector2(7, 1)
+aplha = 1.0
+
 [sub_resource type="Resource" id="Resource_7tumh"]
 script = ExtResource("6_w3qtq")
 solid = SubResource("Resource_f52ex")
@@ -53,7 +47,7 @@ gass = ExtResource("4_3av1b")
 script = ExtResource("3_1ob37")
 name = ""
 prim_texture = SubResource("Resource_7tumh")
-aux_texture = SubResource("Resource_4xovo")
+aux_texture = ExtResource("1_bhg06")
 uses_paste_phase = false
 color = Color(0.931652, 0.741576, 0.0473375, 1)
 heatCapacity = SubResource("Resource_4bgb2")

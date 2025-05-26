@@ -27,5 +27,8 @@ shadow_enabled = true
 
 [node name="Region" parent="." instance=ExtResource("2_s0845")]
 transform = Transform3D(0.999998, -0.00160892, -0.00145604, 0.00161209, 0.999996, 0.00218318, 0.00145254, -0.0021855, 0.999997, -0.0468769, -0.0993881, -0.0452418)
-worldSize = Vector3i(1, 1, 1)
-sectionSize = Vector3i(16, 16, 16)
+worldSize = Vector3i(16, 2, 16)
+sectionSize = Vector3i(4, 4, 4)
+noSimThreads = 16
+simClockTime = 100
+simRange = 4

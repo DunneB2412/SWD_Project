@@ -1,6 +1,7 @@
-[gd_resource type="Resource" script_class="Mineral" load_steps=5 format=3 uid="uid://bvbtraemmuyg8"]
+[gd_resource type="Resource" script_class="Mineral" load_steps=6 format=3 uid="uid://bvbtraemmuyg8"]
 
 [ext_resource type="Script" uid="uid://d37lb6l4suonn" path="res://Scripts/Mineral/Definations/MineralHeatMap.gd" id="1_2gdwr"]
+[ext_resource type="Resource" uid="uid://baya3u5b0l725" path="res://Scripts/Mineral/common/mineral_textures/Aux2.tres" id="1_tin5t"]
 [ext_resource type="Script" uid="uid://bgknwn5va48b0" path="res://Scripts/Mineral/Definations/Mineral.gd" id="3_yaepu"]
 [ext_resource type="Resource" uid="uid://c48ao2e505coa" path="res://Scripts/Mineral/common/mineral_textures/freezing.tres" id="4_3anjf"]
 
@@ -25,7 +26,7 @@ condGass = 0.25
 script = ExtResource("3_yaepu")
 name = ""
 prim_texture = ExtResource("4_3anjf")
-aux_texture = ExtResource("4_3anjf")
+aux_texture = ExtResource("1_tin5t")
 uses_paste_phase = false
 color = Color(0, 0, 0, 1)
 heatCapacity = SubResource("Resource_bepoj")

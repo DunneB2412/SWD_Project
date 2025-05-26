@@ -1,27 +1,12 @@
 [gd_resource type="Resource" script_class="Mineral" load_steps=11 format=3 uid="uid://bq44xng5lvu0v"]
 
 [ext_resource type="Resource" uid="uid://6gcwk4a4iltc" path="res://Scripts/Mineral/common/Gass.tres" id="1_a348y"]
+[ext_resource type="Resource" uid="uid://baya3u5b0l725" path="res://Scripts/Mineral/common/mineral_textures/Aux2.tres" id="1_o6vjd"]
 [ext_resource type="Resource" uid="uid://dv6ole473sjoa" path="res://Scripts/Mineral/common/Liquid.tres" id="2_dk1f7"]
 [ext_resource type="Script" uid="uid://dr6r178ahf0ds" path="res://Scripts/Mineral/Definations/MineralTexture.gd" id="3_ieh6h"]
 [ext_resource type="Script" uid="uid://d4d2aj05ouj6a" path="res://Scripts/Mineral/Definations/BlockTextureMap.gd" id="4_1tqxp"]
 [ext_resource type="Script" uid="uid://bgknwn5va48b0" path="res://Scripts/Mineral/Definations/Mineral.gd" id="5_erwvt"]
 [ext_resource type="Script" uid="uid://d37lb6l4suonn" path="res://Scripts/Mineral/Definations/MineralHeatMap.gd" id="5_o7mmw"]
-
-[sub_resource type="Resource" id="Resource_bupoj"]
-script = ExtResource("4_1tqxp")
-top = Vector2(4, 0)
-bottom = Vector2(4, 0)
-left = Vector2(4, 0)
-right = Vector2(4, 0)
-front = Vector2(4, 0)
-back = Vector2(4, 0)
-aplha = 1.0
-
-[sub_resource type="Resource" id="Resource_p88pg"]
-script = ExtResource("3_ieh6h")
-solid = SubResource("Resource_bupoj")
-liquid = ExtResource("2_dk1f7")
-gass = ExtResource("1_a348y")
 
 [sub_resource type="Resource" id="Resource_o6vjd"]
 script = ExtResource("5_o7mmw")
@@ -33,12 +18,22 @@ lhpPaste = 0.0
 lhpLiquid = 840.0
 lhpGass = 1000.0
 pcPaste = 0.0
-pcLiquid = 1712.0
-pcGass = 2357.0
+pcLiquid = 1e+06
+pcGass = 1e+06
 condsolid = 0.25
 condPaste = 0.25
 condLiquid = 0.25
 condGass = 0.25
+
+[sub_resource type="Resource" id="Resource_bupoj"]
+script = ExtResource("4_1tqxp")
+top = Vector2(4, 0)
+bottom = Vector2(4, 0)
+left = Vector2(4, 0)
+right = Vector2(4, 0)
+front = Vector2(4, 0)
+back = Vector2(4, 0)
+aplha = 1.0
 
 [sub_resource type="Resource" id="Resource_nvdn5"]
 script = ExtResource("3_ieh6h")
@@ -50,7 +45,7 @@ gass = ExtResource("1_a348y")
 script = ExtResource("5_erwvt")
 name = "OakPlanks"
 prim_texture = SubResource("Resource_nvdn5")
-aux_texture = SubResource("Resource_p88pg")
+aux_texture = ExtResource("1_o6vjd")
 uses_paste_phase = false
 color = Color(0.513726, 0.32549, 0.14902, 1)
 heatCapacity = SubResource("Resource_o6vjd")

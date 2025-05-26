@@ -1,29 +1,13 @@
 [gd_resource type="Resource" script_class="Mineral" load_steps=12 format=3 uid="uid://dprdisqmwkyoj"]
 
 [ext_resource type="Script" uid="uid://d37lb6l4suonn" path="res://Scripts/Mineral/Definations/MineralHeatMap.gd" id="1_4qykp"]
+[ext_resource type="Resource" uid="uid://baya3u5b0l725" path="res://Scripts/Mineral/common/mineral_textures/Aux2.tres" id="1_kk2l0"]
 [ext_resource type="Script" uid="uid://bgknwn5va48b0" path="res://Scripts/Mineral/Definations/Mineral.gd" id="3_1f80f"]
 [ext_resource type="Resource" uid="uid://dxfsx02ei0ixi" path="res://Scripts/Mineral/common/Lava.tres" id="3_k2j6j"]
 [ext_resource type="Resource" uid="uid://6gcwk4a4iltc" path="res://Scripts/Mineral/common/Gass.tres" id="4_xnguv"]
 [ext_resource type="Resource" uid="uid://dv6ole473sjoa" path="res://Scripts/Mineral/common/Liquid.tres" id="5_jybgk"]
 [ext_resource type="Script" uid="uid://d4d2aj05ouj6a" path="res://Scripts/Mineral/Definations/BlockTextureMap.gd" id="6_6mas7"]
 [ext_resource type="Script" uid="uid://dr6r178ahf0ds" path="res://Scripts/Mineral/Definations/MineralTexture.gd" id="7_rpk8v"]
-
-[sub_resource type="Resource" id="Resource_sy6a0"]
-script = ExtResource("6_6mas7")
-top = Vector2(4, 1)
-bottom = Vector2(4, 1)
-left = Vector2(4, 1)
-right = Vector2(4, 1)
-front = Vector2(4, 1)
-back = Vector2(4, 1)
-aplha = 1.0
-
-[sub_resource type="Resource" id="Resource_15uou"]
-script = ExtResource("7_rpk8v")
-solid = SubResource("Resource_sy6a0")
-paste = ExtResource("3_k2j6j")
-liquid = ExtResource("5_jybgk")
-gass = ExtResource("4_xnguv")
 
 [sub_resource type="Resource" id="Resource_uiqx4"]
 script = ExtResource("1_4qykp")
@@ -34,13 +18,23 @@ shpGass = 300.0
 lhpPaste = 1000.0
 lhpLiquid = 1000.0
 lhpGass = 1000.0
-pcPaste = 2900.0
-pcLiquid = 3000.0
-pcGass = 3200.0
+pcPaste = 29000.0
+pcLiquid = 30000.0
+pcGass = 32000.0
 condsolid = 0.25
 condPaste = 0.25
 condLiquid = 0.25
 condGass = 0.25
+
+[sub_resource type="Resource" id="Resource_sy6a0"]
+script = ExtResource("6_6mas7")
+top = Vector2(4, 1)
+bottom = Vector2(4, 1)
+left = Vector2(4, 1)
+right = Vector2(4, 1)
+front = Vector2(4, 1)
+back = Vector2(4, 1)
+aplha = 1.0
 
 [sub_resource type="Resource" id="Resource_ra0f8"]
 script = ExtResource("7_rpk8v")
@@ -53,9 +47,9 @@ gass = ExtResource("4_xnguv")
 script = ExtResource("3_1f80f")
 name = ""
 prim_texture = SubResource("Resource_ra0f8")
-aux_texture = SubResource("Resource_15uou")
+aux_texture = ExtResource("1_kk2l0")
 uses_paste_phase = true
-color = Color(0.921357, 0.304661, 0.135768, 1)
+color = Color(1, 1, 1, 1)
 heatCapacity = SubResource("Resource_uiqx4")
 normalDendity = 800.0
 hardness = 10

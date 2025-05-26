@@ -170,6 +170,8 @@ func addHeatAt(pos:Vector3i,j:int) -> void:
 		return #no temprature in a vaccume
 	var t = heatE[flat]
 	var r = t + j
+	if r < 0:
+		print(r)
 	heatE[flat] = r
 	
 func flattenCord(pos: Vector3i) -> int:

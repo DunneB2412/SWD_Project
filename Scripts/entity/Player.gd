@@ -140,9 +140,9 @@ func world_clicks(pos,norm):
 			region.ForceUpdate(focous)
 		if Input.is_action_just_pressed("rightMouse"):
 			if Input.is_action_pressed("Alt"):
-				region.addAt(focous,item,50,SectionData.celToKel(30))
+				region.addAt(focous,item,1000,SectionData.celToKel(30))
 			else:
-				region.addAt(focous+Vector3i(fnorm),item,50,SectionData.celToKel(30))
+				region.addAt(focous+Vector3i(fnorm),item,1000,SectionData.celToKel(30))
 			region.ForceUpdate(focous)
 	
 
