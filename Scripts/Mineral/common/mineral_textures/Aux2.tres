@@ -1,0 +1,55 @@
+[gd_resource type="Resource" script_class="MineralTexture" load_steps=7 format=3 uid="uid://baya3u5b0l725"]
+
+[ext_resource type="Script" uid="uid://d4d2aj05ouj6a" path="res://Scripts/Mineral/Definations/BlockTextureMap.gd" id="1_ivqg7"]
+[ext_resource type="Script" uid="uid://dr6r178ahf0ds" path="res://Scripts/Mineral/Definations/MineralTexture.gd" id="3_eyi52"]
+
+[sub_resource type="Resource" id="Resource_75yo5"]
+script = ExtResource("1_ivqg7")
+top = Vector2(4, 5)
+bottom = Vector2(4, 5)
+left = Vector2(4, 5)
+right = Vector2(4, 5)
+front = Vector2(4, 5)
+back = Vector2(4, 5)
+aplha = 1.0
+metadata/_custom_type_script = "uid://d4d2aj05ouj6a"
+
+[sub_resource type="Resource" id="Resource_dw64i"]
+script = ExtResource("1_ivqg7")
+top = Vector2(4, 5)
+bottom = Vector2(4, 5)
+left = Vector2(4, 5)
+right = Vector2(4, 5)
+front = Vector2(4, 5)
+back = Vector2(4, 5)
+aplha = 1.0
+metadata/_custom_type_script = "uid://d4d2aj05ouj6a"
+
+[sub_resource type="Resource" id="Resource_55kb6"]
+script = ExtResource("1_ivqg7")
+top = Vector2(4, 5)
+bottom = Vector2(4, 5)
+left = Vector2(4, 5)
+right = Vector2(4, 5)
+front = Vector2(4, 5)
+back = Vector2(4, 5)
+aplha = 1.0
+metadata/_custom_type_script = "uid://d4d2aj05ouj6a"
+
+[sub_resource type="Resource" id="Resource_eyi52"]
+script = ExtResource("1_ivqg7")
+top = Vector2(4, 5)
+bottom = Vector2(4, 5)
+left = Vector2(4, 5)
+right = Vector2(4, 5)
+front = Vector2(4, 5)
+back = Vector2(4, 5)
+aplha = 1.0
+metadata/_custom_type_script = "uid://d4d2aj05ouj6a"
+
+[resource]
+script = ExtResource("3_eyi52")
+solid = SubResource("Resource_eyi52")
+paste = SubResource("Resource_55kb6")
+liquid = SubResource("Resource_dw64i")
+gass = SubResource("Resource_75yo5")
