@@ -172,6 +172,7 @@ func addHeatAt(pos:Vector3i,j:int) -> void:
 	var r = t + j
 	if r < 0:
 		print(r)
+		clear(pos)#Temp fail safe.
 	heatE[flat] = r
 	
 func flattenCord(pos: Vector3i) -> int:

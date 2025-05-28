@@ -26,13 +26,17 @@ var simQueue: Array
 var simQueueMutex: Mutex
 var simSemaphore: Semaphore
 var simQueueSync: int
+
 var meshThread: Thread
+var mesherMutex: Mutex
 
 var newQueue: Array[Section]
 var newQueueMutex: Mutex
 
 var pPos: Vector3i
 var run: bool
+
+@export var watertest = true
 
 var noise_y_small: FastNoiseLite = FastNoiseLite.new()
 # Called when the node enters the scene tree for the first time.
@@ -41,10 +45,12 @@ func _ready() -> void:
 	
 	newQueue = []
 	newQueueMutex = Mutex.new()
+	mesherMutex = Mutex.new()
 	
 	prep()
 	
 	run = true
+	
 	meshThread = Thread.new()
 	meshThread.start(_mesh)
 	
@@ -97,7 +103,13 @@ func _process(_delta: float) -> void:
 
 func _mesh():
 	while run:
-		for sec: Section in sections.values():
+		mesherMutex.lock()
+		var secs = sections.keys()
+		mesherMutex.unlock()
+		for key in secs:
+			mesherMutex.lock()
+			var sec = sections[key]
+			mesherMutex.unlock()
 			if sec.updated:
 				#TimedExe(sec.genMesh, "genMesh on "+str(sec.name))
 				sec.genMesh()
@@ -169,13 +181,17 @@ func prep():
 			col(pos)
 #util
 func getHeight(x,z) -> int:
+	if watertest:
+		return 60
 	var frequency = Vector2i(1,1)
 	var offset = 60
 	var amplitude = 20 * globalAmp
 	var grad = noise_y_small.get_noise_2d(x*frequency.x,z*frequency.y)
 	return offset + (grad*amplitude)
 	
-func getWaterLine() -> int:
+func getWaterLine(x,z) -> int: 
+	if watertest && x==0 && z ==0:
+		return 64
 	return 60
 	
 
@@ -207,12 +223,13 @@ func getVal(cord: Vector3i) -> PackedInt64Array:
 	if sec == null:
 		return [-1]
 	return sec.getVal(relative["block"], Global.REF_VEC3)
-func addAt(cord: Vector3i, val: int, mass: int, temp: float) -> int:
+func addAt(cord: Vector3i, val: int, mass: int, temp: float, force:bool = false) -> int:
 	var relative = get_relatives(cord)
 	var sec = getSec(relative['sec'])
 	if sec == null:
-		#sec = addSection(relative['sec'])
-		return 0
+		if !force:
+			return 0
+		sec = addSection(relative['sec'])
 	return sec.addAt(relative["block"],val, mass, temp, Global.REF_VEC3)
 func break_block(cord: Vector3i) -> PackedInt64Array:
 	var val = getVal(cord)
@@ -220,6 +237,7 @@ func break_block(cord: Vector3i) -> PackedInt64Array:
 		var m = SectionData.readMeta(v,SectionData.INC.MASS)
 		addAt(cord,v,-m,0)
 	return val
+	
 
 func ForceUpdate(cord: Vector3i):
 	var relative = get_relatives(cord)
@@ -263,7 +281,7 @@ func getHeatAt(cord: Vector3i):
 
 func col(pos:Vector2i) -> void:
 	var miny = INF
-	var maxy = getWaterLine()/sectionSize.y
+	var maxy = getWaterLine(pos.x,pos.y)/sectionSize.y
 	for x in sectionSize.x:  #load all surface sections. 
 		for z in sectionSize.z:
 			var wCord = Vector3i(x,0,z) + (Vector3i(pos.x,0,pos.y)*sectionSize)
@@ -283,7 +301,9 @@ func col(pos:Vector2i) -> void:
 func addSection(pos:Vector3i):
 	if !sections.has(pos):
 		var sec = Section.new(pos,sectionSize,blockSize, self, blockLib)
+		mesherMutex.lock()
 		sections.merge({pos:sec})
+		mesherMutex.unlock()
 		newQueueMutex.lock()
 		newQueue.append(sec)
 		newQueueMutex.unlock()

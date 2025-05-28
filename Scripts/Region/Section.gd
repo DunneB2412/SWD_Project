@@ -39,13 +39,13 @@ var pos: Vector3i
 var root: Node
 @export var lib: BlockLib
 
-var debugMode = false
+var debugMode = true
 var debugContainer: Node3D
 var updated = false
 var nextMesh: Mesh
 var meshMutex: Mutex
 
-var WaterTest = false
+var WaterTest = true
 
 
 func _init(posIn: Vector3i,sizeIn: Vector3i,cellSizeIn: float, rootIn: Node, libIn: BlockLib) -> void:
@@ -94,13 +94,7 @@ func loadSection() -> void:
 			var waterHeight = 0
 			if root != null:
 				height = root.getHeight(wCord.x,wCord.z) - (size.y*pos.y)
-				waterHeight = root.getWaterLine() - (size.y*pos.y)
-			if WaterTest:
-				height = waterHeight
-				if x == 4 and z == 4:
-					waterHeight += 4
-			 
-			
+				waterHeight = root.getWaterLine(wCord.x,wCord.z) - (size.y*pos.y)
 			
 			var soil = 2
 			if height - 3 < waterHeight:
@@ -173,6 +167,8 @@ func genMesh(colide = true) -> void:
 	updated = false
 	
 func setEmpty():
+	for c in self.get_children():
+		c.queue_free()
 	self.mesh = ArrayMesh.new()
 		
 func DebugOutline(con: Node3D):
@@ -248,14 +244,14 @@ func createFace(cord: Vector3i, dir :Global.DIR, cell: PackedInt64Array, rot: in
 			rot = 0
 		addToFace(template.getFace(dir),template.vertices,template.Reset, st,cord,texture,color,rot,scale)
 		
-	if debugMode :
-		var offset = Global.OFFSETS[dir] 
-		var test = Label3D.new()
-		test.text = str(cord+(pos*size))+"\n"+info(cord)
-		test.position = (cord * cellSize) + (Vector3(cellSize,cellSize,cellSize)/2) + (Global.OFFSETS[dir]*0.51)
-		test.font_size = 12
-		test.rotation = Vector3(deg_to_rad(-90)*offset.y,(deg_to_rad(90)*offset.x)+(deg_to_rad(180)*min(offset.z,0)),0)
-		debcon.add_child(test)
+	#if debugMode : TODPO change to coloured rects.
+		#var offset = Global.OFFSETS[dir] 
+		#var test = Label3D.new()
+		#test.text = str(cord+(pos*size))+"\n"+info(cord)
+		#test.position = (cord * cellSize) + (Vector3(cellSize,cellSize,cellSize)/2) + (Global.OFFSETS[dir]*0.51)
+		#test.font_size = 12
+		#test.rotation = Vector3(deg_to_rad(-90)*offset.y,(deg_to_rad(90)*offset.x)+(deg_to_rad(180)*min(offset.z,0)),0)
+		#debcon.add_child(test)
 
 
 func info(cord: Vector3i) -> String :
@@ -338,7 +334,7 @@ func addAt(cord: Vector3i, val: int, mass: int, temp: float, overflow: Vector3i 
 	return 0
 
 func initWith(cord:Vector3i, val: int, temp: float):
-	addAt(cord,val, lib.blocks[SectionData.readMeta(val,INC.BLOCK_TYPE)].mineral.normalDendity + (randi_range(-150,150)),temp)
+	addAt(cord,val, lib.blocks[SectionData.readMeta(val,INC.BLOCK_TYPE)].mineral.normalDendity,temp)
 	
 #temprature handelers
 func avgHeatCapAt(cell: PackedInt64Array) -> float:
@@ -408,7 +404,7 @@ func findAction():
 				if SectionData.readMeta(part,INC.PHASE) >0 && j <= 4:
 					fluidAct(cord,part)
 				var t = SectionData.readMeta(part,INC.BLOCK_TYPE)
-				var alc = lib.blocks[t].mineral.alchemic
+				var alc: AlchemicMap = lib.blocks[t].mineral.alchemic
 				if alc:
 					alc.process(self,cord,part)
 			
@@ -431,10 +427,12 @@ func tempAct(cord:Vector3i, part: int, j):
 				sum+= temp
 		
 		var avg = sum/suitable.size()
+		var capacity = avgHeatCapAt(getVal(cord))
 		for o in suitable:
 			var ncord = cord+o[0]
 			var dif = (avg-o[1])*(o[2]/10)#TODO, scale with time delta.
-			var energy = dif*avgHeatCapAt(getVal(ncord)) # this creates energy magically. mesure the temprature transferr and get the energy from the top of the gradiant
+			var mul = (capacity + avgHeatCapAt(getVal(ncord)))/2
+			var energy = dif*mul
 			addHeatAt(ncord,energy) #TODo needs to add the correct amount of energy. this gets rounded down ot 0 and will have no effect.
 		
 	#handle phase change. TODO make more efficiant this is to expensive.
@@ -458,7 +456,7 @@ func tempAct(cord:Vector3i, part: int, j):
 		var lhp = mineral.heatCapacity.getLhp(phase-1)
 		var alt = SectionData.setMeta(part,INC.PHASE, phase-1)
 		while temp <threshold && mass >0:
-			addHeatAt(cord, +lhp,Global.REF_VEC3)
+			addHeatAt(cord, +(lhp/1000),Global.REF_VEC3)
 			addAt(cord,part,-1,temp,Global.REF_VEC3)
 			mass -= 1 #take current phase
 			addAt(cord,alt,1,temp,Global.REF_VEC3)
@@ -516,7 +514,7 @@ func fluidAct(cord:Vector3i, m: int):
 	#if (cord.x+cord.y+cord.z)%2!=0: #che3cker pattorn check
 		#return
 	if mas<5: #don't split if there is not enough TODO should depend on viscosity of liquid. 
-		addAt(cord,m,-mas,0)
+		#s
 		return
 	#can't fall or float, try flow.
 	var dirs = [
@@ -547,27 +545,28 @@ func fluidAct(cord:Vector3i, m: int):
 		var e = cord+o[0]
 		var dif =(avgm-o[1])/suitable.size()
 		var move = dif*o[2]
+		# tODO, resolve consistancy issues here. 
 		addAt(e,m,floor(move), temp)
 		addAt(cord,m,-floor(move),temp)
 		mas += -floor(move)
 		
 	
-	if mas> den:
-		altdata = data.getVal(cord+Global.OFFSETS[Global.DIR.UP])[0] #we will only consider the primary
-		altp = SectionData.readMeta(altdata,INC.PHASE)
-		if altdata == 0 || altp > 0:
-			var altT = SectionData.readMeta(altdata, INC.BLOCK_TYPE)
-			if altT != t:
-				var altd = lib.blocks[altT].mineral.normalDendity
-				if altd < den:
-					var dif = mas - den #send as much as naturally permited.
-					addAt(cord,m,-dif, temp)
-					mas = mas - dif
-					addAt(cord+Global.OFFSETS[Global.DIR.UP],m,dif,temp)
-					
-		else:
-			#permuable ?
-			pass
+	#if mas> den:
+		#altdata = data.getVal(cord+Global.OFFSETS[Global.DIR.UP])[0] #we will only consider the primary
+		#altp = SectionData.readMeta(altdata,INC.PHASE)
+		#if altdata == 0 || altp > 0:
+			#var altT = SectionData.readMeta(altdata, INC.BLOCK_TYPE)
+			#if altT != t:
+				#var altd = lib.blocks[altT].mineral.normalDendity
+				#if altd < den:
+					#var dif = mas - den #send as much as naturally permited.
+					#addAt(cord,m,-dif, temp)
+					#mas = mas - dif
+					#addAt(cord+Global.OFFSETS[Global.DIR.UP],m,dif,temp)
+					#
+		#else:
+			##permuable ?
+			#pass
 		
 
 #func checkFlow(cord:Vector3i,dir:Global.DIR,t:int,den:int,mas:int ):
@@ -601,3 +600,10 @@ func fluidAct(cord:Vector3i, m: int):
 	#else:
 		##permuable ?
 		#pass
+
+
+func move(a:Vector3i, b: Vector3i, part: int, mass: int) -> int:
+	return 0
+	
+func change(a:Vector3i,part:int, va: SectionData.INC, val: int) :
+	pass

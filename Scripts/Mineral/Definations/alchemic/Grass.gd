@@ -1,10 +1,14 @@
-extends AlchemicMap
+extends Burning
 class_name Grass
 
+const fertailSoil = [2]
+
 func process(section:Section, cord: Vector3i, val: int):
+	super.process(section,cord,val)
 	var temp = section.getTemp(cord)
 	var up = section.getVal(cord+Global.OFFSETS[Global.DIR.UP])
-	if up[0]>0:
+	var cell = section.getVal(cord)
+	if up[0]>0 || !fertailSoil.has(SectionData.readMeta(cell[0],SectionData.INC.BLOCK_TYPE)):
 		#return{Global.REF_VEC3: {}}
 		section.addAt(cord,val,-50,temp, Global.REF_VEC3)
 		var alt = SectionData.setMeta(val, SectionData.INC.BLOCK_TYPE,2 )
@@ -18,6 +22,8 @@ func process(section:Section, cord: Vector3i, val: int):
 		section.addAt(cord,val,50,temp, Global.REF_VEC3)
 		if mass < 100:
 			return
+			
+	
 	
 	var offsets = [
 		Global.OFFSETS[Global.DIR.WEST],
@@ -49,5 +55,5 @@ func process(section:Section, cord: Vector3i, val: int):
 						hasGrass = hasGrass || true
 				if ! hasGrass:
 					section.addAt(cord,val,-50,temp, Global.REF_VEC3)
-					section.addAt(cord+offset,val,50,temp, Global.REF_VEC3)
+					section.addAt(cord+offset,val,50,temp)
 								
